@@ -419,16 +419,13 @@ function updateSpec() {
 // シートの出力
 
 //// TSV出力
-$(document).on('click', '#output-sheet-tsv', function () {
-
-  // BOMの用意（文字化け対策）
-  let bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+$(document).on('click', '#output-sheet-tsv', function (e) {
+  e.preventDefault();
 
   // TSVデータの用意
   // id, name, answer, description
   let tsv_data = "======打ち合わせシート======\r\n【シート管理情報】\r\n";
 
-  // ToDo: JSONから作成する
   // シート管理情報
   $(".sheet-info-each").each(function (index, element) {
     if ($(element).hasClass("input-group-text")) {
@@ -459,41 +456,61 @@ $(document).on('click', '#output-sheet-tsv', function () {
     tsv_data = tsv_data + id + "\t" + name + "\t" + answerText + "\t" + description + "\r\n";
   });
 
-  let blob = new Blob([bom, tsv_data], { type: 'text/tsv' });
+  // BOM付きでBlobを作成（Safari対応）
+  let bom = "\uFEFF";
+  let content = bom + tsv_data;
+  let blob = new Blob([content], { type: 'text/tab-separated-values;charset=utf-8;' });
 
-  let url = (window.URL || window.webkitURL).createObjectURL(blob);
-
-  let downloader = document.getElementById('downloader-tsv');
+  // Safari対応：一時的なアンカー要素を作成してダウンロード
+  let downloader = document.createElement('a');
   downloader.download = 'sheet.tsv';
-  downloader.href = url;
 
-  // ダウンロードリンクをクリックする
-  $('#downloader-tsv')[0].click();
+  if (window.navigator.msSaveOrOpenBlob) {
+    // IE10+
+    window.navigator.msSaveBlob(blob, 'sheet.tsv');
+  } else {
+    // その他のブラウザ
+    let url = window.URL.createObjectURL(blob);
+    downloader.href = url;
+    document.body.appendChild(downloader);
+    downloader.click();
+    document.body.removeChild(downloader);
+    window.URL.revokeObjectURL(url);
+  }
 
 });
 
 
 //// JSON出力
-$(document).on('click', '#output-sheet-json', function () {
+$(document).on('click', '#output-sheet-json', function (e) {
+  e.preventDefault();
 
   // まずJSONを更新
   updateSpec();
 
-  // BOMの用意（文字化け対策）
-  let bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-
   // シート管理情報
   let json_data = $("#data-sheetspec").text();
 
-  let blob = new Blob([bom, json_data], { type: 'text/json' });
+  // BOM付きでBlobを作成（Safari対応）
+  let bom = "\uFEFF";
+  let content = bom + json_data;
+  let blob = new Blob([content], { type: 'application/json;charset=utf-8;' });
 
-  let url = (window.URL || window.webkitURL).createObjectURL(blob);
-
-  let downloader = document.getElementById('downloader-json');
+  // Safari対応：一時的なアンカー要素を作成してダウンロード
+  let downloader = document.createElement('a');
   downloader.download = 'sheet.json';
-  downloader.href = url;
 
-  // ダウンロードリンクをクリックする
-  $('#downloader-json')[0].click();
+  if (window.navigator.msSaveOrOpenBlob) {
+    // IE10+
+    window.navigator.msSaveBlob(blob, 'sheet.json');
+  } else {
+    // その他のブラウザ
+    let url = window.URL.createObjectURL(blob);
+    downloader.href = url;
+    document.body.appendChild(downloader);
+    downloader.click();
+    document.body.removeChild(downloader);
+    window.URL.revokeObjectURL(url);
+  }
 
 });

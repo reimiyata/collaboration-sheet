@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
 	<!-- Required meta tags -->
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	
+
 	<!-- Bootstrap CSS -->
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+		integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 	<link rel="stylesheet" href="general.css">
 
 	<script src="https://code.jquery.com/jquery-3.5.1.min.js"
-	integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+		integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
 		integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
 		crossorigin="anonymous"></script>
@@ -42,7 +44,8 @@
 			<div class="collapse navbar-collapse" id="navbarCollapse">
 				<ul class="navbar-nav mr-auto">
 					<li class="nav-item active">
-						<a class="nav-link" href="#" data-toggle="modal" data-target="#howtoModal">使い方<span class="sr-only">(current)</span></a>
+						<a class="nav-link" href="#" data-toggle="modal" data-target="#howtoModal">使い方<span
+								class="sr-only">(current)</span></a>
 					</li>
 					<li class="nav-item active">
 						<a class="nav-link" href="#" data-toggle="modal" data-target="#historyModal">更新履歴</a>
@@ -64,15 +67,18 @@
 				<div class="input-group-prepend">
 					<button class="btn btn-outline-secondary" disabled>受付番号</button>
 				</div>
-				<input id="data-submissionid" type="text" class="form-control sheet-info-each" value="" data-label="受付番号">
+				<input id="data-submissionid" type="text" class="form-control sheet-info-each" value=""
+					data-label="受付番号">
 				<div class="input-group-prepend">
 					<button class="btn btn-outline-secondary" disabled>受付日</button>
 				</div>
-				<input id="data-submissiontime" type="text" class="form-control sheet-info-each" value="" data-label="受付日">
+				<input id="data-submissiontime" type="text" class="form-control sheet-info-each" value=""
+					data-label="受付日">
 				<div class="input-group-prepend">
 					<button class="btn btn-outline-secondary" disabled>最終更新日</button>
 				</div>
-				<input id="data-lastmodifiedtime" type="text" class="form-control sheet-info-each" value="" data-label="最終更新日">
+				<input id="data-lastmodifiedtime" type="text" class="form-control sheet-info-each" value=""
+					data-label="最終更新日">
 				<div class="input-group-prepend">
 					<button class="btn btn-outline-secondary" disabled>作成者</button>
 				</div>
@@ -86,7 +92,7 @@
 				</div>
 				<input id="data-progress" type="text" class="form-control sheet-info-each" value="" data-label="進行状況">
 			</div>
-			
+
 			<div id="basic-info-sheet" class="input-group input-group-sm mb-2">
 				<div class="input-group-prepend">
 					<button class="btn btn-outline-secondary" disabled>授業者</button>
@@ -109,33 +115,34 @@
 
 
 		<div id="all-wrap" class="">
-	
+
 			<div id="menu-wrap" class="mb-2">
-				<div class="small"><span id="display-prior" class="btn btn-sm btn-secondary change-display-item">* 事前入力推奨項目のみを表示</span></div>
+				<div class="small"><span id="display-prior" class="btn btn-sm btn-secondary change-display-item">*
+						事前入力推奨項目のみを表示</span></div>
 				<div class="menu-item">
 					<div id="print-sheet" class="btn btn-sm btn-outline-secondary">印刷</div>
 				</div>
 				<div class="dropdown menu-item">
-					<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
-						aria-haspopup="true" aria-expanded="false">
+					<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+						id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 						出力
 					</button>
 					<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 						<a id="output-sheet-tsv" class="dropdown-item" href="#">タブ区切りファイル（.tsv）で出力</a>
-						<a style="display:none;" id="downloader-tsv" href="#"></a>
 						<!-- <a class="dropdown-item" href="#">エクセルファイル（.xlsx）で出力</a> -->
 						<a id="output-sheet-json" class="dropdown-item" href="#">JSONファイル（.json）で出力（再読み込み可能形式）</a>
-						<a style="display:none;" id="downloader-json" href="#"></a>
 					</div>
-				</div>				
+				</div>
 				<div class="menu-item">
 					<div class="input-group small">
 						<div id="input-sheet-json" class="custom-file">
 							<input id="open-user-sheet" type="file" class="custom-file-input" accept=".json">
-							<label class="custom-file-label"  for="open-user-sheet" data-browse="参照">既存シート選択（JSON形式）</label>
+							<label class="custom-file-label" for="open-user-sheet"
+								data-browse="参照">既存シート選択（JSON形式）</label>
 						</div>
 						<div class="input-group-append">
-							<button id="show-user-sheet" type="button" class="btn btn-outline-secondary btn-sm ">表示</button>
+							<button id="show-user-sheet" type="button"
+								class="btn btn-outline-secondary btn-sm ">表示</button>
 						</div>
 					</div>
 				</div>
@@ -145,7 +152,7 @@
 				<div id="hearing-item-wrap" class="level-0">
 				</div>
 			</div>
-	
+
 			<div id="guide-wrap">
 				<div class="guide-item-wrap hidden">
 					<div class="guide-label text-center">(A) 授業 ＞ (08) 活動 ＞ (e) 流れ</div>
@@ -153,7 +160,7 @@
 					<div class="guide-example">
 						<div class="example-wrap"></div>
 					</div>
-				</div>	
+				</div>
 			</div>
 
 		</div>
@@ -182,13 +189,14 @@
 				<ul>
 					<li>よりよい授業向け教材資料提供のために、「(A) 授業に関する情報」「(B) 資料に関する情報」「(C) 提供に関する情報」の各項目を埋めてください。</li>
 					<li>このシートは、教員と学校司書が共同で徐々に作り上げていくものです。</li>
-						<ul>
-							<li>最初から完全なものを作る必要はありません。</li>
-							<li>「*」がついている箇所は、主に教員向けの事前入力推奨項目です。可能な限り埋めておくと、より円滑な打ち合わせが期待できます。</li>
-						</ul>
+					<ul>
+						<li>最初から完全なものを作る必要はありません。</li>
+						<li>「*」がついている箇所は、主に教員向けの事前入力推奨項目です。可能な限り埋めておくと、より円滑な打ち合わせが期待できます。</li>
+					</ul>
 					<li>入力欄にフォーカスする、もしくは項目名をクリックすると、回答の書き方やサンプルが右側に表示されます。</li>
 					</li>
-					<li>一部の入力項目については、入力欄にフォーカスすると、選択肢や回答フォーマットがドロップダウンメニューで表示されます。なるべく選択肢から選ぶようにしてください。該当する項目がない場合は、自由に記述してください。</li>
+					<li>一部の入力項目については、入力欄にフォーカスすると、選択肢や回答フォーマットがドロップダウンメニューで表示されます。なるべく選択肢から選ぶようにしてください。該当する項目がない場合は、自由に記述してください。
+					</li>
 				</ul>
 				<h5>ファイルの保存と読み込み</h5>
 				<ul>
@@ -229,7 +237,8 @@
 				<ul>
 					<li>Ver.3: 教員によるフィードバックを反映</li>
 					<li><a href="./v2/index.html" target="_blank">Ver.2</a>: 学校図書館職員によるフィードバックを反映</li>
-					<li><a href="./v1/index.html" target="_blank">Ver.1</a>: 先行研究（宮田・矢田・浅石, 2018; 浅石・矢田・宮田, 2020）をベースに設計</li>
+					<li><a href="./v1/index.html" target="_blank">Ver.1</a>: 先行研究（宮田・矢田・浅石, 2018; 浅石・矢田・宮田, 2020）をベースに設計
+					</li>
 				</ul>
 			</div>
 			<div class="modal-footer">
@@ -251,23 +260,28 @@
 			</div>
 			<div class="modal-body">
 				<ul>
-					<li>宮田玲, 浅石卓真, 矢田竣太郎 (2021)「学校図書館による教材資料提供プロセスのモデル化と教員連携を促す打ち合わせシートの開発」第69回日本図書館情報学会研究大会, 熊本（ハイブリッド開催）, pp.5–8.
+					<li>宮田玲, 浅石卓真, 矢田竣太郎 (2021)「学校図書館による教材資料提供プロセスのモデル化と教員連携を促す打ち合わせシートの開発」第69回日本図書館情報学会研究大会,
+						熊本（ハイブリッド開催）, pp.5–8.
 						<ul>
 							<li>打ち合わせシートの設計方針とVer.1の開発についての報告</li>
 							<li>学校図書館職員経験者への予備評価アンケートも実施</li>
-							<li>スライドは<a href="https://jslis.jp/wp-content/uploads/2021/10/202110_presentation_Miyata-slide.pdf"
+							<li>スライドは<a
+									href="https://jslis.jp/wp-content/uploads/2021/10/202110_presentation_Miyata-slide.pdf"
 									target="_blank">こちら</a></li>
-							<li>大会発表論文集は<a href="https://jslis.jp/wp-content/uploads/2021/10/2021-conf.-proceedings_no-ads.pdf"
+							<li>大会発表論文集は<a
+									href="https://jslis.jp/wp-content/uploads/2021/10/2021-conf.-proceedings_no-ads.pdf"
 									target="_blank">こちら</a></li>
 						</ul>
 					</li>
-					<li>浅石卓真, 宮田玲, 矢田竣太郎 (2020)「<a href="http://doi.org/10.15119/00002944" target="_blank">司書はどのように教材を選定しているか：教材検索システムの開発に向けた予備調査</a>」『アカデミア. 人文・自然科学編』20, pp.99–112.
+					<li>浅石卓真, 宮田玲, 矢田竣太郎 (2020)「<a href="http://doi.org/10.15119/00002944"
+							target="_blank">司書はどのように教材を選定しているか：教材検索システムの開発に向けた予備調査</a>」『アカデミア. 人文・自然科学編』20, pp.99–112.
 						<ul>
 							<li>現役司書への資料選定に関するインタビュー調査結果の報告</li>
 							<li>2名の司書に理科の単元に関する資料選定を依頼し、そのプロセスを記録・調査</li>
 						</ul>
 					</li>
-					<li>宮田玲, 矢田竣太郎, 浅石卓真 (2018)「<a href="https://www.jstage.jst.go.jp/article/jslis/64/3/64_115/_article/-char/ja/"
+					<li>宮田玲, 矢田竣太郎, 浅石卓真 (2018)「<a
+							href="https://www.jstage.jst.go.jp/article/jslis/64/3/64_115/_article/-char/ja/"
 							target="_blank">学校図書館の教員サポートにおける授業に関連した資料提供の事例分析</a>」『日本図書館情報学会誌』64(3), pp.115–131.
 						<ul>
 							<li>打ち合わせシートの項目設計のベースとなる記述的研究</li>

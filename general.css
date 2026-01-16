@@ -1,19 +1,23 @@
 /* 上書き */
-body{
-  line-height: 1.0;
-  margin: 10px;
+body {
+    line-height: 1.0;
+    margin: 10px;
 }
-main{
+
+main {
     margin-top: 60px;
     margin-left: 5px;
     margin-bottom: 250px;
 }
-.input-group > .custom-select{
+
+.input-group>.custom-select {
     width: 200px;
 }
-.input-group > .form-control{
+
+.input-group>.form-control {
     width: 200px;
 }
+
 .modal-body li {
     margin-bottom: 5px;
     line-height: 20px;
@@ -21,75 +25,91 @@ main{
 
 
 /* 全体 */
-.hidden{
+.hidden {
     display: none;
 }
-.display-table{
+
+.display-table {
     display: table;
 }
-.highlight{
+
+.highlight {
     background-color: gainsboro;
 }
-.marker{
+
+.marker {
     background-color: mistyrose;
 }
-.form-main .dropdown-menu.show{
+
+.form-main .dropdown-menu.show {
     width: 455px;
     font-size: small;
 }
-.form-prior{
+
+.form-prior {
     /*background-color: lemonchiffon;*/
 }
-.modal-dialog{
+
+.modal-dialog {
     max-width: 700px;
 }
 
 /* 個別 */
-#all-wrap{
+#all-wrap {
     /* display: table; */
     clear: left;
     /* margin: 20px; */
 }
-#basic-info-wrap{
+
+#basic-info-wrap {
     width: 1135px;
 }
-#hearing-wrap{
+
+#hearing-wrap {
     display: table-cell;
     width: 700px;
     /* padding: 10px; */
 }
-#guide-wrap{
+
+#guide-wrap {
     display: table-cell;
     width: 500px;
 }
-#menu-wrap{
+
+#menu-wrap {
     display: table;
     border-collapse: separate;
     border-spacing: 4px 0;
     margin: 0 -4px
 }
-#general-menu{
+
+#general-menu {
     display: table-cell;
 }
-.menu-item{
+
+.menu-item {
     display: table-cell;
     vertical-align: top;
 }
-#select-sheet{
+
+#select-sheet {
     /* vertical-align: top; */
 }
-#open-user-sheet{
+
+#open-user-sheet {
     width: 250px;
 }
+
 /* #print-sheet, #open-sheet, #output-sheet-all{
     display: table-cell;
 } */
-.guide-label{
+.guide-label {
     font-weight: bold;
     /* font-size: larger; */
     margin-bottom: 10px;
 }
-.guide-item-wrap{
+
+.guide-item-wrap {
     margin-left: 10px;
     width: 400px;
     /* font-size: larger; */
@@ -97,121 +117,162 @@ main{
     position: relative;
     padding: 10px 10px;
 }
-#hlp-wrap{
+
+#hlp-wrap {
     /* display: table-cell; */
     width: 400px;
     padding: 0px 10px;
 }
-.hlp-item-wrap{
+
+.hlp-item-wrap {
     padding: 10px 0px;
 }
-.guide-level0{
+
+.guide-level0 {
     width: 500px;
 }
-.hlp-level0{
+
+.hlp-level0 {
     position: fixed;
 }
-#data-version{
+
+#data-version {
     max-width: 50px;
 }
-#data-submissionid, #data-submissiontime, #data-lastmodifiedtime, #data-creator, #data-answerdate, #data-librarian, #data-classdate, #data-teacher{
+
+#data-submissionid,
+#data-submissiontime,
+#data-lastmodifiedtime,
+#data-creator,
+#data-answerdate,
+#data-librarian,
+#data-classdate,
+#data-teacher {
     max-width: 100px;
 }
-#data-classname{
+
+#data-classname {
     width: 90px;
 }
-.hearing-item{
+
+.hearing-item {
     display: table;
 }
-.hearing-label{
+
+.hearing-label {
     display: table-cell;
     width: 150px;
 }
-.hearing-variable{
+
+.hearing-variable {
     display: table-cell;
 }
-.hearing-variable-slot{
+
+.hearing-variable-slot {
     width: 200px;
 }
-.hlp-item{
+
+.hlp-item {
     display: table;
 }
-.hlp-label{
+
+.hlp-label {
     display: table-cell;
     width: 150px;
 }
-.hlp-variable{
+
+.hlp-variable {
     display: table-cell;
 }
-.hlp-variable-slot{
+
+.hlp-variable-slot {
     width: 200px;
 }
-.hlp-level1{
+
+.hlp-level1 {
     padding: 5px 0px;
     border-bottom: dotted 1px gray;
 }
-.level-1{
+
+.level-1 {
     background-color: azure;
     padding-bottom: 10px;
     padding-left: 5px;
 }
-.level-2{
+
+.level-2 {
     /* padding-left: 13px; */
 }
-.level-3 .hearing-each-name{
+
+.level-3 .hearing-each-name {
     padding-left: 12px;
 }
-.hearing-each-name{
+
+.hearing-each-name {
     display: table-cell;
     width: 250px;
     vertical-align: top;
     padding-top: 10px;
     font-weight: bold;
 }
-.form-wrap{
+
+.form-wrap {
     display: table-cell;
     width: 470px;
 }
-.hearing-each-wrap{
+
+.hearing-each-wrap {
     margin-bottom: 5px;
 }
-.guide-description{
+
+.guide-description {
     margin: 10px;
     padding: 10px;
     border: 2px solid black;
     border-radius: 5px;
     line-height: 20px;
 }
-.guide-example{
+
+.guide-example {
     margin: 10px 10px;
 }
-.example{
+
+.example {
     margin-top: 5px;
 }
-.terminal{
+
+.terminal {
     cursor: pointer;
 }
-#hearing-note{
+
+#hearing-note {
     text-align: right;
 }
+
 .checkbox-wrap {
     margin: 3px 0px;
 }
-.each-example{
+
+.each-example {
     margin-bottom: 10px;
 }
+
 .print-off {
-  display: none;
+    display: none;
 }
-.katsuyo-db{
+
+.katsuyo-db {
     margin-left: 5px;
 }
-.example{
+
+.example {
     line-height: 20px;
 }
-.hearing-item-option{
+
+.hearing-item-option {
     padding-left: 10px;
 }
-.change-display-item{
+
+.change-display-item {
     width: 220px;
 }
