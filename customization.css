@@ -1,0 +1,131 @@
+/* カスタマイズモード用スタイル */
+
+/* カスタマイズモード時の項目スタイル */
+.customization-mode .hearing-each-wrap {
+	border: 2px dashed #dee2e6;
+	border-radius: 4px;
+	padding: 10px;
+	margin: 8px 0;
+	background-color: #f8f9fa;
+	transition: all 0.2s;
+}
+
+.customization-mode .hearing-each-wrap:hover {
+	border-color: #007bff;
+	background-color: #e7f1ff;
+}
+
+/* カスタマイズコントロール */
+.customization-controls {
+	display: none;
+	gap: 5px;
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid #dee2e6;
+	flex-wrap: wrap;
+}
+
+.customization-mode .customization-controls {
+	display: flex;
+	align-items: center;
+}
+
+/* ドラッグハンドル */
+.drag-handle {
+	cursor: move;
+	font-size: 1.2em;
+	color: #6c757d;
+	padding: 5px 10px;
+	margin-right: 10px;
+	user-select: none;
+}
+
+.drag-handle:hover {
+	color: #007bff;
+}
+
+/* ソート中のスタイル */
+.sortable-ghost {
+	opacity: 0.4;
+	background: #e9ecef;
+}
+
+.sortable-drag {
+	opacity: 0.8;
+	cursor: grabbing;
+}
+
+/* カスタマイズモード時は項目名を強調 */
+.customization-mode .hearing-each-name {
+	font-weight: bold;
+	font-size: 1.1em;
+	color: #495057;
+	cursor: default;
+}
+
+/* 階層の視覚化 */
+.customization-mode .level-1 {
+	margin-left: 0;
+}
+
+.customization-mode .level-2 {
+	margin-left: 20px;
+	border-left: 3px solid #007bff;
+}
+
+.customization-mode .level-3 {
+	margin-left: 40px;
+	border-left: 3px solid #28a745;
+}
+
+/* ボタンスタイル */
+.customization-controls .btn {
+	font-size: 0.85em;
+	padding: 4px 8px;
+}
+
+.customization-controls .btn i {
+	margin-right: 3px;
+}
+
+/* 編集モーダル */
+#editItemModal .modal-dialog {
+	max-width: 700px;
+}
+
+#editItemModal .form-group {
+	margin-bottom: 1rem;
+}
+
+#editItemModal label {
+	font-weight: 600;
+	color: #495057;
+}
+
+#editItemModal .text-danger {
+	color: #dc3545;
+}
+
+/* カスタマイズモード時はガイドを非表示 */
+.customization-mode #guide-wrap {
+	display: none;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+	.customization-controls {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.customization-controls .btn {
+		width: 100%;
+		margin-bottom: 3px;
+	}
+
+	.drag-handle {
+		text-align: center;
+		margin-right: 0;
+		margin-bottom: 5px;
+	}
+}
