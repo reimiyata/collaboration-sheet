@@ -63,19 +63,43 @@
 	cursor: default;
 }
 
-/* 階層の視覚化 */
+/* 階層の視覚化（旧） */
+/* ネスト構造導入に伴い、インデントは .children-wrap で制御するため削除・調整 */
 .customization-mode .level-1 {
 	margin-left: 0;
 }
 
 .customization-mode .level-2 {
-	margin-left: 20px;
+	/* margin-left: 20px; */
+	/* children-wrapでインデントされるので不要 */
 	border-left: 3px solid #007bff;
 }
 
 .customization-mode .level-3 {
-	margin-left: 40px;
+	/* margin-left: 40px; */
+	/* children-wrapでインデントされるので不要 */
 	border-left: 3px solid #28a745;
+}
+
+/* ネストされた子要素のコンテナ */
+.children-wrap {
+	margin-left: 20px;
+	padding-left: 10px;
+	border-left: 1px dashed #ccc;
+	min-height: 10px;
+	/* 空でもドラッグできるように高さを確保 */
+}
+
+/* カスタマイズモード時は通常のインデントを無効化（DOM構造で表現するため） */
+.customization-mode .hearing-each-wrap.level-2,
+.customization-mode .hearing-each-wrap.level-3 {
+	margin-left: 0;
+	padding-left: 10px;
+	/* 少しパディングを持たせる */
+}
+
+.customization-mode .hearing-each-name {
+	padding-left: 5px;
 }
 
 /* ボタンスタイル */

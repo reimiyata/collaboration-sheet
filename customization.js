@@ -25,13 +25,9 @@ function enterCustomizationMode() {
 	// all-wrapにカスタマイズモードクラスを追加
 	$('#all-wrap').addClass('customization-mode');
 
-	// 各項目にカスタマイズコントロールを追加
-	$('.hearing-each-wrap').each(function () {
-		addCustomizationControls($(this));
-	});
-
-	// 入力フォームを非表示
-	$('.form-wrap').hide();
+	// 入れ子構造でシートを描画
+	let spec = JSON.parse($('#data-sheetspec').html());
+	makeNestedSheet(spec);
 
 	// ドラッグ&ドロップを有効化
 	initializeDragAndDrop();
@@ -59,17 +55,84 @@ function exitCustomizationMode() {
 	// ドラッグ&ドロップを無効化
 	destroyDragAndDrop();
 
-	// シートを再描画
+	// シートを再描画（通常モード）
 	$('#hearing-item-wrap').empty();
 	let spec = JSON.parse($('#data-sheetspec').html());
 	makeSheet(spec);
 	resizeTextarea();
 }
 
+// 入れ子構造でシートを作成
+function makeNestedSheet(spec) {
+	$('#hearing-item-wrap').empty();
+	let content = spec['sheet-content'];
+
+	// 親子関係のマップを作成
+	let childrenMap = {};
+	content.forEach(item => {
+		if (!childrenMap[item.parent]) {
+			childrenMap[item.parent] = [];
+		}
+		childrenMap[item.parent].push(item);
+	});
+
+	// 再帰的にDOMを作成する関数
+	function createItemDom(parentId) {
+		let items = childrenMap[parentId];
+		if (!items) return null;
+
+		let container = $('<div class="children-wrap"></div>');
+		if (parentId === 'root') {
+			container = $('#hearing-item-wrap'); // ルートは直接追加
+		}
+
+		items.forEach(item => {
+			let id = item.id;
+			let level = item.level;
+			let type = item.type;
+			let name = item.name;
+
+			// 既存のHTML生成ロジックを再利用（簡略化）
+			// 本来ならmakeSheetの一部を切り出して再利用すべきだが、ここではカスタマイズモード専用に構築
+			let prefix = "";
+			let eachDom = $(`<div id="${id}" data-parent="${item.parent}" class="hearing-each-wrap level-${level} ${type}" data-name="${name}">
+				<div class="hearing-each-name">
+					${prefix}(${id.split('-').slice(-1)[0]}) ${name}
+				</div>
+			</div>`);
+
+			// カスタマイズコントロールを追加
+			addCustomizationControls(eachDom);
+
+			// 子要素のコンテナを追加
+			if (childrenMap[id]) {
+				let childrenDom = createItemDom(id);
+				if (childrenDom) {
+					eachDom.append(childrenDom);
+				}
+			}
+
+			container.append(eachDom);
+		});
+
+		return container;
+	}
+
+	createItemDom('root');
+	$('.form-wrap').hide(); // フォームは隠す
+}
+
 // 項目にカスタマイズコントロールを追加
 function addCustomizationControls(itemDom) {
 	let id = itemDom.attr('id');
-	let type = itemDom.hasClass('terminal') ? 'terminal' : 'nonterminal';
+
+	// レベル3の場合は子項目追加ボタンを表示しない
+	let isMaxLevel = itemDom.hasClass('level-3');
+	let addChildBtn = isMaxLevel ? '' : `
+      <button class="btn btn-sm btn-success add-child-btn" data-id="${id}" title="子項目を追加">
+        <i class="fas fa-plus"></i> 子項目
+      </button>
+	`;
 
 	let controls = $(`
     <div class="customization-controls">
@@ -79,16 +142,15 @@ function addCustomizationControls(itemDom) {
       <button class="btn btn-sm btn-info edit-item-btn" data-id="${id}" title="編集">
         <i class="fas fa-edit"></i> 編集
       </button>
-      <button class="btn btn-sm btn-success add-child-btn" data-id="${id}" title="子項目を追加">
-        <i class="fas fa-plus"></i> 子項目
-      </button>
+      ${addChildBtn}
       <button class="btn btn-sm btn-danger delete-item-btn" data-id="${id}" title="削除">
         <i class="fas fa-trash"></i> 削除
       </button>
     </div>
   `);
 
-	itemDom.find('.hearing-each-name').after(controls);
+	// nameの後ろに追加
+	itemDom.find('.hearing-each-name').first().after(controls);
 }
 
 // ドラッグ&ドロップの初期化
@@ -98,23 +160,39 @@ function initializeDragAndDrop() {
 	// 既存のインスタンスを破棄
 	destroyDragAndDrop();
 
-	// hearing-item-wrapをソート可能にする
-	let el = document.getElementById('hearing-item-wrap');
-	if (el) {
-		let sortable = Sortable.create(el, {
-			animation: 150,
-			handle: '.drag-handle',
-			ghostClass: 'sortable-ghost',
-			dragClass: 'sortable-drag',
-			onEnd: function (evt) {
-				// ドロップ後にIDを振り直し
-				reassignIds();
-				// シートを再描画
-				refreshSheet();
-			}
-		});
-		sortableInstances.push(sortable);
+	// ルートレベル
+	let rootEl = document.getElementById('hearing-item-wrap');
+	if (rootEl) {
+		createSortable(rootEl);
 	}
+
+	// 子レベル（すべての.children-wrap）
+	let childWraps = document.getElementsByClassName('children-wrap');
+	for (let i = 0; i < childWraps.length; i++) {
+		createSortable(childWraps[i]);
+	}
+}
+
+function createSortable(el) {
+	let sortable = Sortable.create(el, {
+		animation: 150,
+		handle: '.drag-handle',
+		ghostClass: 'sortable-ghost',
+		dragClass: 'sortable-drag',
+		group: {
+			name: 'nested',
+			pull: false, // 他のリストへの移動を禁止
+			put: false   // 他のリストからの受け入れを禁止
+		},
+		onEnd: function (evt) {
+			reassignIds();
+			// refreshSheetは呼ばない（DOM構造が変わるため、Sortableが混乱する可能性がある）
+			// 必要なら再描画ではなく、ID表示のみ更新する処理を入れる
+			// ここではシンプルにデータ更新のみ行い、ユーザーが何かアクションしたときに再描画される
+			refreshIdsInDom();
+		}
+	});
+	sortableInstances.push(sortable);
 }
 
 // ドラッグ&ドロップの無効化
@@ -127,96 +205,108 @@ function destroyDragAndDrop() {
 	sortableInstances = [];
 }
 
-// IDの自動振り直し
+// IDの自動振り直し（DOM構造からSpecを再構築）
 function reassignIds() {
+	let spec = JSON.parse($('#data-sheetspec').html());
+	let originalContent = spec['sheet-content']; // フォームデータなどを保持するために参照
+
+	let newContent = [];
+	let idCounters = {};
+
+	// DOMをトラバースして順序と階層を取得
+	function traverse(element, parentId, level) {
+		let children = $(element).children('.hearing-each-wrap');
+
+		children.each(function () {
+			let currentId = $(this).attr('id');
+			// オリジナルのデータを検索（フォームの内容などを維持するため）
+			let itemData = originalContent.find(c => c.id === currentId);
+			if (!itemData) {
+				// 新規追加などで見つからない場合のフォールバック（通常はありえない）
+				itemData = {
+					id: currentId,
+					name: $(this).data('name'),
+					type: $(this).hasClass('terminal') ? 'terminal' : 'nonterminal',
+					form: {}
+				};
+			}
+
+			// 新しいIDを生成
+			let newId;
+			if (parentId === 'root') {
+				if (!idCounters[parentId]) idCounters[parentId] = 65; // A
+				newId = String.fromCharCode(idCounters[parentId]);
+				idCounters[parentId]++;
+			} else {
+				if (!idCounters[parentId]) idCounters[parentId] = 1;
+
+				if (level === 2) {
+					newId = `${parentId}-${String(idCounters[parentId]).padStart(2, '0')}`;
+				} else if (level === 3) {
+					newId = `${parentId}-${String.fromCharCode(96 + idCounters[parentId])}`;
+				} else {
+					newId = `${parentId}-${idCounters[parentId]}`;
+				}
+				idCounters[parentId]++;
+			}
+
+			// データを更新（元の配列を汚染しないようにコピーを作成）
+			let newItemData = Object.assign({}, itemData);
+			newItemData.id = newId;
+			newItemData.parent = parentId;
+			newItemData.level = level;
+
+			newContent.push(newItemData);
+
+			// DOM上のIDなども更新（後で一括更新だとSortableが狂うかも？一旦データだけ作る）
+
+			// 再帰的に子要素を処理
+			let childContainer = $(this).children('.children-wrap');
+			if (childContainer.length > 0) {
+				traverse(childContainer, newId, level + 1);
+			}
+		});
+	}
+
+	traverse($('#hearing-item-wrap'), 'root', 1);
+
+	// Specを更新
+	spec['sheet-content'] = newContent;
+	$('#data-sheetspec').text(JSON.stringify(spec, null, 2));
+
+	console.log("IDs reassigned based on DOM structure");
+}
+
+// DOM上のID表示のみ更新（再描画なし）
+function refreshIdsInDom() {
 	let spec = JSON.parse($('#data-sheetspec').html());
 	let content = spec['sheet-content'];
 
-	// DOMの順序を取得
-	let newOrder = [];
-	$('#hearing-item-wrap .hearing-each-wrap').each(function () {
-		let id = $(this).attr('id');
-		newOrder.push(id);
-	});
+	// 現在のDOMの各要素に対して、新しいIDを適用
+	// 注意: DOMのIDを変更するとSortableが動かなくなる可能性があるかは要検証
+	// ここではID属性そのものは変更せず、見た目のラベルだけ変えるのが安全かもしれないが
+	// 保存処理などでID属性を使っているので、整合性をとる必要がある。
+	// 一旦、reassignIds内でIDが変わっているので、DOMのIDも変える必要がある。
 
-	// 新しい順序でコンテンツを並び替え
-	let reorderedContent = [];
-	newOrder.forEach(id => {
-		let item = content.find(c => c.id === id);
-		if (item) {
-			reorderedContent.push(item);
-		}
-	});
+	// しかし、IDを変えるとtraverseができなくなるので、reassignIdsのロジック内でやるべきか、
+	// あるいは全再描画する方が安全。
+	// SortableのonEndで全再描画するとドラッグ状態がおかしくなることがあるが、onEndならドロップ完了後なので大丈夫なはず。
 
-	// IDを振り直し
-	let idCounters = {};
-	reorderedContent.forEach((item, index) => {
-		let parent = item.parent;
-		let level = item.level;
-
-		if (parent === 'root') {
-			// ルートレベルのID（A, B, C...）
-			if (!idCounters[parent]) {
-				idCounters[parent] = 65; // 'A'のASCIIコード
-			}
-			item.id = String.fromCharCode(idCounters[parent]);
-			idCounters[parent]++;
-		} else {
-			// 子項目のID
-			if (!idCounters[parent]) {
-				idCounters[parent] = 1;
-			}
-
-			if (level === 2) {
-				// A-01, A-02形式
-				item.id = `${parent}-${String(idCounters[parent]).padStart(2, '0')}`;
-			} else if (level === 3) {
-				// A-01-a, A-01-b形式
-				item.id = `${parent}-${String.fromCharCode(96 + idCounters[parent])}`;
-			} else {
-				// その他のレベル（Level 4以降）: A-01-a-1, A-01-a-2形式
-				item.id = `${parent}-${idCounters[parent]}`;
-			}
-			idCounters[parent]++;
-		}
-	});
-
-	// 親IDも更新（子項目の場合）
-	reorderedContent.forEach(item => {
-		if (item.parent !== 'root') {
-			// 親が変更されている可能性があるので、DOMから取得
-			let itemDom = $(`#${CSS.escape(item.id)}`);
-			let parentDom = itemDom.parent().closest('.hearing-each-wrap');
-			if (parentDom.length > 0) {
-				item.parent = parentDom.attr('id');
-			}
-		}
-	});
-
-	spec['sheet-content'] = reorderedContent;
-	$('#data-sheetspec').text(JSON.stringify(spec, null, 2));
-
-	console.log("IDs reassigned", reorderedContent);
+	refreshSheet();
 }
 
 // シートの再描画
 function refreshSheet() {
 	if (!isCustomizationMode) return;
 
-	$('#hearing-item-wrap').empty();
+	// スクロール位置の保持
+	let scrollPos = $(window).scrollTop();
+
 	let spec = JSON.parse($('#data-sheetspec').html());
-	makeSheet(spec);
-
-	// カスタマイズコントロールを再追加
-	$('.hearing-each-wrap').each(function () {
-		addCustomizationControls($(this));
-	});
-
-	// 入力フォームを非表示
-	$('.form-wrap').hide();
-
-	// ドラッグ&ドロップを再初期化
+	makeNestedSheet(spec);
 	initializeDragAndDrop();
+
+	$(window).scrollTop(scrollPos);
 }
 
 // 項目の編集
