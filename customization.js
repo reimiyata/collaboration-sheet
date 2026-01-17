@@ -515,7 +515,7 @@ $(document).ready(function () {
 	// カスタマイズモード切り替えボタンがまだ存在しない場合は追加
 	if ($('#toggle-customization-mode').length === 0) {
 		let toggleBtn = $(`
-      <div class="small">
+      <div class="small menu-item">
         <span id="toggle-customization-mode" class="btn btn-sm btn-warning">
           <i class="fas fa-edit"></i> カスタマイズモード
         </span>
