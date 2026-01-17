@@ -88,7 +88,8 @@ async function sendChatRequest(userMessage) {
 	// Add user message to history
 	chatHistory.push({
 		role: 'user',
-		content: userMessage
+		content: userMessage,
+		timestamp: new Date().toISOString()
 	});
 
 	// Generate system prompt
@@ -167,7 +168,8 @@ async function sendChatRequest(userMessage) {
 		// Add assistant response to history
 		chatHistory.push({
 			role: 'assistant',
-			content: assistantMessage
+			content: assistantMessage,
+			timestamp: new Date().toISOString()
 		});
 
 		// Parse and apply updates
@@ -571,3 +573,49 @@ $(document).ready(function () {
 	// Hide AI assistant in customization mode
 	// (This will be called from customization.js)
 });
+
+// ========================================
+// Export/Import Functions (Global)
+// ========================================
+
+// Export chat history for saving
+function getChatHistory() {
+	return chatHistory.map(msg => ({
+		role: msg.role,
+		content: msg.content,
+		timestamp: msg.timestamp || new Date().toISOString()
+	}));
+}
+
+// Restore chat history from loaded data
+function restoreChatHistory(history) {
+	if (!history || !Array.isArray(history)) {
+		console.warn('Invalid chat history data');
+		return;
+	}
+
+	// Clear current chat
+	chatHistory = history;
+
+	// Redraw chat messages
+	$('#ai-chat-messages').empty();
+	history.forEach(msg => {
+		if (msg.role === 'user') {
+			addMessage(msg.content, 'user');
+		} else if (msg.role === 'assistant') {
+			// Parse and display assistant message
+			try {
+				const parsed = JSON.parse(msg.content);
+				addMessage(parsed.message, 'ai');
+			} catch (e) {
+				addMessage(msg.content, 'ai');
+			}
+		}
+	});
+
+	console.log('Chat history restored:', history.length, 'messages');
+}
+
+// Make functions globally accessible
+window.getChatHistory = getChatHistory;
+window.restoreChatHistory = restoreChatHistory;

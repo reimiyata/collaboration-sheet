@@ -365,7 +365,31 @@ $(document).on('click', '#show-user-sheet', function () {
     reader.onload = function (evt) {
       console.log("State: " + evt.target.readyState);
       console.log("Result: " + evt.target.result);
-      file_content = JSON.parse(evt.target.result);
+
+      let data = JSON.parse(evt.target.result);
+
+      // Check if this is the new format with chat history
+      if (data.version && data.sheetSpec) {
+        // New format (with version and sheetSpec)
+        file_content = data.sheetSpec;
+
+        // Update spec first
+        $("#data-sheetspec").text(JSON.stringify(file_content, null, 2));
+
+        // Restore chat history if present
+        if (data.chatHistory && data.chatHistory.length > 0) {
+          if (typeof window.restoreChatHistory === 'function') {
+            window.restoreChatHistory(data.chatHistory);
+            console.log('Chat history restored:', data.chatHistory.length, 'messages');
+          }
+        }
+      } else {
+        // Old format (just the spec)
+        file_content = data;
+        $("#data-sheetspec").text(JSON.stringify(file_content, null, 2));
+      }
+
+      // Redraw sheet
       $("#hearing-item-wrap").empty();
       makeSheet(file_content);
       resizeTextarea();
@@ -503,6 +527,57 @@ $(document).on('click', '#output-sheet-json', function (e) {
   if (window.navigator.msSaveOrOpenBlob) {
     // IE10+
     window.navigator.msSaveBlob(blob, 'sheet.json');
+  } else {
+    // その他のブラウザ
+    let url = window.URL.createObjectURL(blob);
+    downloader.href = url;
+    document.body.appendChild(downloader);
+    downloader.click();
+    document.body.removeChild(downloader);
+    window.URL.revokeObjectURL(url);
+  }
+
+});
+
+//// JSON出力（シート＋チャットログ）
+$(document).on('click', '#output-sheet-chat-json', function (e) {
+  e.preventDefault();
+
+  // まずJSONを更新
+  updateSpec();
+
+  // シート管理情報
+  let sheetSpec = JSON.parse($("#data-sheetspec").text());
+
+  // チャット履歴を取得（ai-assistant.jsから）
+  let chatHistory = [];
+  if (typeof window.getChatHistory === 'function') {
+    chatHistory = window.getChatHistory();
+  }
+
+  // 統合データを作成
+  let exportData = {
+    version: "1.0",
+    exportDate: new Date().toISOString(),
+    sheetSpec: sheetSpec,
+    chatHistory: chatHistory
+  };
+
+  let json_data = JSON.stringify(exportData, null, 2);
+
+  // BOM付きでBlobを作成（Safari対応）
+  let bom = "\uFEFF";
+  let content = bom + json_data;
+  let blob = new Blob([content], { type: 'application/json;charset=utf-8;' });
+
+  // Safari対応：一時的なアンカー要素を作成してダウンロード
+  let downloader = document.createElement('a');
+  let filename = 'sheet-with-chat-' + new Date().toISOString().slice(0, 10) + '.json';
+  downloader.download = filename;
+
+  if (window.navigator.msSaveOrOpenBlob) {
+    // IE10+
+    window.navigator.msSaveBlob(blob, filename);
   } else {
     // その他のブラウザ
     let url = window.URL.createObjectURL(blob);
