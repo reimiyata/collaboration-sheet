@@ -1,0 +1,573 @@
+// AI Assistant for Collaboration Sheet
+// Manages chat interface, Azure OpenAI integration, and undo/redo functionality
+
+// ========================================
+// State Management
+// ========================================
+
+let aiSettings = {
+	endpoint: '',
+	apiKey: '',
+	model: 'gpt-5',
+	reasoningEffort: 'medium',
+	verbosity: 'medium'
+};
+
+let chatHistory = [];
+let historyStack = [];
+let historyIndex = -1;
+const MAX_HISTORY = 20;
+let isProcessing = false;
+
+// Speech recognition
+let recognition = null;
+let isRecording = false;
+
+// ========================================
+// Settings Management
+// ========================================
+
+function loadSettings() {
+	const saved = localStorage.getItem('ai-assistant-settings');
+	if (saved) {
+		try {
+			aiSettings = JSON.parse(saved);
+			// Populate form
+			$('#ai-endpoint').val(aiSettings.endpoint);
+			$('#ai-api-key').val(aiSettings.apiKey);
+			$('#ai-model').val(aiSettings.model);
+			$('#ai-reasoning').val(aiSettings.reasoningEffort);
+			$('#ai-verbosity').val(aiSettings.verbosity);
+		} catch (e) {
+			console.error('Failed to load settings:', e);
+		}
+	}
+}
+
+function saveSettings() {
+	aiSettings = {
+		endpoint: $('#ai-endpoint').val().trim(),
+		apiKey: $('#ai-api-key').val().trim(),
+		model: $('#ai-model').val(),
+		reasoningEffort: $('#ai-reasoning').val(),
+		verbosity: $('#ai-verbosity').val()
+	};
+
+	if (!validateSettings()) {
+		return false;
+	}
+
+	localStorage.setItem('ai-assistant-settings', JSON.stringify(aiSettings));
+	$('#aiSettingsModal').modal('hide');
+	alert('設定を保存しました');
+	return true;
+}
+
+function validateSettings() {
+	if (!aiSettings.endpoint) {
+		alert('エンドポイントを入力してください');
+		return false;
+	}
+	if (!aiSettings.apiKey) {
+		alert('APIキーを入力してください');
+		return false;
+	}
+	return true;
+}
+
+// ========================================
+// Azure OpenAI Integration
+// ========================================
+
+async function sendChatRequest(userMessage) {
+	if (!validateSettings()) {
+		addMessage('設定が不完全です。設定ボタンからAzure OpenAIの情報を入力してください。', 'ai');
+		return;
+	}
+
+	// Add user message to history
+	chatHistory.push({
+		role: 'user',
+		content: userMessage
+	});
+
+	// Generate system prompt
+	const systemPrompt = generateSystemPrompt();
+
+	// Prepare messages
+	const messages = [
+		{ role: 'system', content: systemPrompt },
+		...chatHistory
+	];
+
+	try {
+		showLoading();
+
+		const response = await fetch(`${aiSettings.endpoint}/chat/completions?api-version=2024-12-01-preview`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'api-key': aiSettings.apiKey
+			},
+			body: JSON.stringify({
+				model: aiSettings.model,
+				messages: messages,
+				reasoning_effort: aiSettings.reasoningEffort,
+				verbosity: aiSettings.verbosity,
+				response_format: {
+					type: 'json_schema',
+					json_schema: {
+						name: 'sheet_update',
+						strict: true,
+						schema: {
+							type: 'object',
+							properties: {
+								message: {
+									type: 'string',
+									description: 'ユーザーへのメッセージ'
+								},
+								updates: {
+									type: 'array',
+									description: 'シートの更新内容',
+									items: {
+										type: 'object',
+										properties: {
+											field_id: {
+												type: 'string',
+												description: 'フィールドID（例: A-01）'
+											},
+											value: {
+												type: 'string',
+												description: '設定する値'
+											}
+										},
+										required: ['field_id', 'value'],
+										additionalProperties: false
+									}
+								}
+							},
+							required: ['message', 'updates'],
+							additionalProperties: false
+						}
+					}
+				}
+			})
+		});
+
+		hideLoading();
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(`API Error: ${response.status} - ${errorText}`);
+		}
+
+		const data = await response.json();
+		const assistantMessage = data.choices[0].message.content;
+
+		// Add assistant response to history
+		chatHistory.push({
+			role: 'assistant',
+			content: assistantMessage
+		});
+
+		// Parse and apply updates
+		try {
+			const parsed = JSON.parse(assistantMessage);
+			addMessage(parsed.message, 'ai');
+
+			if (parsed.updates && parsed.updates.length > 0) {
+				applySheetUpdates(parsed.updates);
+			}
+		} catch (e) {
+			console.error('Failed to parse AI response:', e);
+			addMessage(assistantMessage, 'ai');
+		}
+
+	} catch (error) {
+		hideLoading();
+		console.error('Chat request failed:', error);
+		addMessage(`エラーが発生しました: ${error.message}`, 'ai');
+	}
+}
+
+function generateSystemPrompt() {
+	const spec = JSON.parse($('#data-sheetspec').html());
+	const content = spec['sheet-content'];
+
+	let prompt = `あなたは「BRIDGE AIアシスタント」です。教員と司書をつなぐ打ち合わせシートの入力を支援します。
+
+【役割】
+- 対話を通じて授業や資料提供に関する情報を収集する
+- 収集した情報を適切なフィールドに自動入力する
+- prior: 1 の項目を優先的に質問する
+- 自然で親しみやすい対話を心がける
+
+【シート構造】
+以下のフィールドがあります:
+
+`;
+
+	// Build field list
+	content.forEach(item => {
+		if (item.type === 'terminal') {
+			prompt += `\n- ID: ${item.id}, 名前: ${item.name}`;
+			if (item.form['form-main-option']) {
+				prompt += `, 選択肢: ${item.form['form-main-option']}`;
+			}
+			if (item.form.prior === 1) {
+				prompt += ` [優先]`;
+			}
+			if (item.form.description) {
+				prompt += `\n  説明: ${item.form.description}`;
+			}
+		}
+	});
+
+	prompt += `\n\n【対話の進め方】
+1. **一度に1つか2つの質問のみ**を行う（決して3つ以上質問しない）
+2. まだ入力されていない優先項目から順に質問する
+3. 選択肢がある項目は選択肢を提示する
+4. ユーザーの回答から関連する情報を抽出し、適切なフィールドに入力する
+5. 一度に複数の項目を埋められる場合は積極的に埋める
+6. すべての重要な情報が収集できたら、ユーザーに確認する
+
+【重要な制約】
+- 1回のメッセージで質問するのは最大2つまで
+- 簡潔で分かりやすい質問を心がける
+- ユーザーが答えやすいように質問を工夫する
+
+【フィールドタイプ別の入力ルール】
+- **選択肢がある項目（checkbox, radio）**: ユーザーの回答内容に該当する選択肢がある場合、必ず選択肢の値をそのまま使用する
+  - 例: 選択肢が「調べ学習／読み聞かせ・ブックトーク／その他／未定」の場合
+    - ユーザーが「調べ学習をします」と答えた場合 → value: "調べ学習"
+    - ユーザーが「調べ学習と読み聞かせ」と答えた場合 → value: "調べ学習／読み聞かせ・ブックトーク"
+  - 選択肢に該当しない場合のみ、詳細欄（form-sub）にテキストで入力する
+- **テキスト入力項目**: ユーザーの回答をそのまま入力
+
+【出力形式】
+必ずJSON形式で以下のように返してください:
+{
+  "message": "ユーザーへのメッセージ（次の質問や確認など）",
+  "updates": [
+    { "field_id": "A-01", "value": "小3" },
+    { "field_id": "A-02", "value": "国語" }
+  ]
+}
+
+updatesが空の配列の場合でも必ず含めてください。`;
+
+	return prompt;
+}
+
+function applySheetUpdates(updates) {
+	if (!updates || updates.length === 0) return;
+
+	// Save current state before applying updates
+	saveState();
+
+	updates.forEach(update => {
+		const fieldId = update.field_id;
+		const value = update.value;
+
+		// Find the input element
+		const $field = $(`#${CSS.escape(fieldId)}`);
+		if ($field.length === 0) {
+			console.warn(`Field not found: ${fieldId}`);
+			return;
+		}
+
+		// Apply value based on field type
+		const $checkbox = $field.find('input[type="checkbox"]');
+		const $radio = $field.find('input[type="radio"]');
+		const $input = $field.find('.form-control').first();
+
+		if ($checkbox.length > 0) {
+			// Handle checkbox (multiple values separated by ／)
+			const values = value.split('／').map(v => v.trim());
+			$checkbox.each(function () {
+				const $cb = $(this);
+				$cb.prop('checked', values.includes($cb.val()));
+			});
+			console.log(`Checkbox updated for ${fieldId}:`, values);
+		} else if ($radio.length > 0) {
+			// Handle radio button
+			const trimmedValue = value.trim();
+			const matched = $radio.filter(function () {
+				return $(this).val() === trimmedValue;
+			});
+			if (matched.length > 0) {
+				matched.prop('checked', true);
+				console.log(`Radio updated for ${fieldId}:`, trimmedValue);
+			} else {
+				console.warn(`No matching radio option for "${trimmedValue}" in ${fieldId}`);
+			}
+		} else if ($input.length > 0) {
+			// Handle text input/textarea/select
+			$input.val(value);
+			// Trigger change event for any listeners
+			$input.trigger('change');
+			console.log(`Text input updated for ${fieldId}:`, value);
+		}
+	});
+
+	// Update spec
+	updateSpec();
+
+	// Update undo/redo buttons
+	updateUndoRedoButtons();
+}
+
+// ========================================
+// Chat UI Management
+// ========================================
+
+function initializeChat() {
+	$('#ai-chat-messages').empty();
+	chatHistory = [];
+
+	// Greeting message
+	addMessage('こんにちは！ BRIDGE AIアシスタントです。先生と司書をつなぐお手伝いをします。\n\n授業についていくつか質問させてください。まず、何年生向けの授業を考えていますか？', 'ai');
+}
+
+function addMessage(text, sender) {
+	const messageClass = sender === 'ai' ? 'ai-message' : 'user-message';
+	const $message = $(`<div class="${messageClass}">${escapeHtml(text)}</div>`);
+	$('#ai-chat-messages').append($message);
+	scrollToBottom();
+}
+
+function showLoading() {
+	const $loading = $(`
+		<div class="ai-loading">
+			<span></span>
+			<span></span>
+			<span></span>
+		</div>
+	`);
+	$('#ai-chat-messages').append($loading);
+	scrollToBottom();
+	isProcessing = true;
+	$('#ai-send-btn').prop('disabled', true);
+}
+
+function hideLoading() {
+	$('.ai-loading').remove();
+	isProcessing = false;
+	$('#ai-send-btn').prop('disabled', false);
+}
+
+function scrollToBottom() {
+	const $messages = $('#ai-chat-messages');
+	$messages.scrollTop($messages[0].scrollHeight);
+}
+
+function escapeHtml(text) {
+	const div = document.createElement('div');
+	div.textContent = text;
+	return div.innerHTML.replace(/\n/g, '<br>');
+}
+
+// ========================================
+// Undo/Redo Management
+// ========================================
+
+function captureSheetState() {
+	const spec = JSON.parse($('#data-sheetspec').html());
+	return JSON.stringify(spec);
+}
+
+function restoreSheetState(stateJson) {
+	const spec = JSON.parse(stateJson);
+
+	// Update the spec
+	$('#data-sheetspec').text(JSON.stringify(spec, null, 2));
+
+	// Redraw the sheet
+	$('#hearing-item-wrap').empty();
+	makeSheet(spec);
+	resizeTextarea();
+}
+
+function saveState() {
+	// Remove any states after current index
+	historyStack = historyStack.slice(0, historyIndex + 1);
+
+	// Capture current state
+	const state = captureSheetState();
+	historyStack.push(state);
+
+	// Limit to MAX_HISTORY
+	if (historyStack.length > MAX_HISTORY) {
+		historyStack.shift();
+	} else {
+		historyIndex++;
+	}
+
+	updateUndoRedoButtons();
+}
+
+function undo() {
+	if (historyIndex > 0) {
+		historyIndex--;
+		restoreSheetState(historyStack[historyIndex]);
+		updateUndoRedoButtons();
+	}
+}
+
+function redo() {
+	if (historyIndex < historyStack.length - 1) {
+		historyIndex++;
+		restoreSheetState(historyStack[historyIndex]);
+		updateUndoRedoButtons();
+	}
+}
+
+function updateUndoRedoButtons() {
+	$('#ai-undo-btn').prop('disabled', historyIndex <= 0);
+	$('#ai-redo-btn').prop('disabled', historyIndex >= historyStack.length - 1);
+}
+
+// ========================================
+// Speech Recognition
+// ========================================
+
+function initializeSpeechRecognition() {
+	// Check browser support
+	const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+	if (!SpeechRecognition) {
+		console.warn('Speech recognition not supported in this browser');
+		$('#ai-mic-btn').prop('disabled', true).attr('title', '音声入力は非対応のブラウザです');
+		return;
+	}
+
+	recognition = new SpeechRecognition();
+	recognition.lang = 'ja-JP';
+	recognition.continuous = false;
+	recognition.interimResults = false;
+
+	recognition.onstart = function () {
+		isRecording = true;
+		$('#ai-mic-btn').addClass('recording');
+		$('#ai-user-input').attr('placeholder', '聞き取り中...');
+	};
+
+	recognition.onend = function () {
+		isRecording = false;
+		$('#ai-mic-btn').removeClass('recording');
+		$('#ai-user-input').attr('placeholder', '質問を送信');
+	};
+
+	recognition.onresult = function (event) {
+		const transcript = event.results[0][0].transcript;
+		$('#ai-user-input').val(transcript);
+		// Automatically send after recognition
+		setTimeout(() => {
+			if ($('#ai-user-input').val() === transcript) {
+				$('#ai-send-btn').click();
+			}
+		}, 500);
+	};
+
+	recognition.onerror = function (event) {
+		console.error('Speech recognition error:', event.error);
+		isRecording = false;
+		$('#ai-mic-btn').removeClass('recording');
+		$('#ai-user-input').attr('placeholder', '質問を送信');
+
+		if (event.error === 'no-speech') {
+			alert('音声が検出されませんでした。もう一度お試しください。');
+		} else if (event.error === 'not-allowed') {
+			alert('マイクへのアクセスが許可されていません。ブラウザの設定を確認してください。');
+		} else {
+			alert(`音声認識エラー: ${event.error}`);
+		}
+	};
+}
+
+function toggleSpeechRecognition() {
+	if (!recognition) {
+		alert('音声認識が利用できません');
+		return;
+	}
+
+	if (isRecording) {
+		recognition.stop();
+	} else {
+		try {
+			recognition.start();
+		} catch (e) {
+			console.error('Failed to start recognition:', e);
+		}
+	}
+}
+
+// ========================================
+// Event Handlers
+// ========================================
+
+$(document).ready(function () {
+	// Load settings
+	loadSettings();
+
+	// Initialize with first state
+	saveState();
+
+	// Initialize speech recognition
+	initializeSpeechRecognition();
+
+	// AI Assistant button click
+	$('#ai-assistant-btn').on('click', function () {
+		$('#ai-chat-window').removeClass('ai-chat-hidden');
+		if (chatHistory.length === 0) {
+			initializeChat();
+		}
+	});
+
+	// Settings button click
+	$('#ai-settings-btn').on('click', function () {
+		$('#aiSettingsModal').modal('show');
+	});
+
+	// Close chat window
+	$('#ai-close-btn').on('click', function () {
+		$('#ai-chat-window').addClass('ai-chat-hidden');
+	});
+
+	// Save settings
+	$('#ai-save-settings').on('click', function () {
+		saveSettings();
+	});
+
+	// Send message
+	function sendMessage() {
+		const message = $('#ai-user-input').val().trim();
+		if (!message || isProcessing) return;
+
+		addMessage(message, 'user');
+		$('#ai-user-input').val('');
+
+		sendChatRequest(message);
+	}
+
+	$('#ai-send-btn').on('click', sendMessage);
+
+	$('#ai-user-input').on('keypress', function (e) {
+		if (e.which === 13 && !e.shiftKey) {
+			e.preventDefault();
+			sendMessage();
+		}
+	});
+
+	// Microphone button
+	$('#ai-mic-btn').on('click', function () {
+		toggleSpeechRecognition();
+	});
+
+	// Undo/Redo
+	$('#ai-undo-btn').on('click', undo);
+	$('#ai-redo-btn').on('click', redo);
+
+	// Hide AI assistant in customization mode
+	// (This will be called from customization.js)
+});

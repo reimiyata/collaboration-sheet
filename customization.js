@@ -25,6 +25,10 @@ function enterCustomizationMode() {
 	// all-wrapにカスタマイズモードクラスを追加
 	$('#all-wrap').addClass('customization-mode');
 
+	// Hide AI assistant in customization mode
+	$('#ai-assistant-container').addClass('ai-assistant-hidden');
+	$('#ai-chat-window').addClass('ai-chat-hidden');
+
 	// 入れ子構造でシートを描画
 	let spec = JSON.parse($('#data-sheetspec').html());
 	makeNestedSheet(spec);
@@ -54,6 +58,9 @@ function exitCustomizationMode() {
 
 	// ドラッグ&ドロップを無効化
 	destroyDragAndDrop();
+
+	// Show AI assistant in normal mode
+	$('#ai-assistant-container').removeClass('ai-assistant-hidden');
 
 	// シートを再描画（通常モード）
 	$('#hearing-item-wrap').empty();
