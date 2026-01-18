@@ -302,10 +302,10 @@ $(document).on('click', '#display-prior', function () {
       $(element).addClass("hidden");
     }
   });
-  $(this).text("全項目");
+  $(this).text("全項目を表示");
   $(this).attr("id", "display-all");
   $(this).addClass("btn-warning");
-  $(this).removeClass("btn-secondary");
+  $(this).removeClass("btn-outline-secondary");
 });
 
 // 事前入力推奨項目のみの表示
@@ -313,9 +313,9 @@ $(document).on('click', '#display-all', function () {
   $(".hearing-each-wrap").each(function (index, element) {
     $(element).removeClass("hidden");
   });
-  $(this).text("* 事前入力項目");
+  $(this).text("* 事前入力項目に絞る");
   $(this).attr("id", "display-prior");
-  $(this).addClass("btn-secondary");
+  $(this).addClass("btn-outline-secondary");
   $(this).removeClass("btn-warning");
 });
 

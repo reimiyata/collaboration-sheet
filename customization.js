@@ -18,7 +18,7 @@ function enterCustomizationMode() {
 
 	// ボタンのスタイルを変更
 	$('#toggle-customization-mode')
-		.removeClass('btn-warning')
+		.removeClass('btn-outline-secondary')
 		.addClass('btn-success')
 		.html('<i class="fas fa-check"></i> 通常モードに戻る');
 
@@ -44,7 +44,7 @@ function exitCustomizationMode() {
 	// ボタンのスタイルを戻す
 	$('#toggle-customization-mode')
 		.removeClass('btn-success')
-		.addClass('btn-warning')
+		.addClass('btn-outline-secondary')
 		.html('<i class="fas fa-edit"></i> カスタマイズモード');
 
 	// カスタマイズモードクラスを削除
@@ -611,13 +611,13 @@ $(document).ready(function () {
 
 	// カスタマイズモード切り替えボタンがまだ存在しない場合は追加
 	if ($('#toggle-customization-mode').length === 0) {
-		let toggleBtn = $('<div class="menu-item"><span id="toggle-customization-mode" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i> カスタマイズモード</span></div>');
+		let toggleBtn = $('<div class="menu-item"><span id="toggle-customization-mode" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i> カスタマイズモード</span></div>');
 		$('#menu-wrap').prepend(toggleBtn);
 	}
 
 	// シート管理情報トグルボタンを追加
 	if ($('#toggle-sheet-info').length === 0) {
-		let toggleInfoBtn = $('<div class="menu-item"><span id="toggle-sheet-info" class="btn btn-sm btn-outline-secondary" style="cursor: pointer;">▼シート管理情報</span></div>');
+		let toggleInfoBtn = $('<div class="menu-item"><span id="toggle-sheet-info" class="btn btn-sm btn-outline-secondary" style="cursor: pointer;">▼ シート管理情報</span></div>');
 		$('#menu-wrap').prepend(toggleInfoBtn);
 	}
 
@@ -629,10 +629,12 @@ $(document).ready(function () {
 		let infoWrap = $('#basic-info-wrap');
 		if (infoWrap.is(':visible')) {
 			infoWrap.hide();
-			$(this).text('▶シート管理情報');
+			$(this).text('▶ シート管理情報');
+			$(this).removeClass('btn-outline-secondary').addClass('btn-secondary');
 		} else {
 			infoWrap.show();
-			$(this).text('▼シート管理情報');
+			$(this).text('▼ シート管理情報');
+			$(this).removeClass('btn-secondary').addClass('btn-outline-secondary');
 		}
 	});
 
