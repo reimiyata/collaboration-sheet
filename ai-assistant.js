@@ -687,11 +687,11 @@ function clearAllFields() {
 	// Clear all form inputs
 	$('.form-control').val('');
 	$('.form-check-input').prop('checked', false);
-	
+
 	// Update the spec and save state for undo/redo
 	updateSpec();
 	saveState();
-	
+
 	// Redraw the sheet to reflect changes
 	const spec = JSON.parse($('#data-sheetspec').text());
 	$('#hearing-item-wrap').empty();
@@ -882,74 +882,100 @@ $(document).ready(function () {
 			clearAllFields();
 		}
 	});
-// ========================================
-// AI Bulk Input Feature
-// ========================================
+	// ========================================
+	// AI Bulk Input Feature
+	// ========================================
 
-let bulkInputFiles = [];
+	let bulkInputFiles = [];
 
-// Open AI Bulk Input Modal
-$('#ai-bulk-input-btn').on('click', function () {
-	// Load settings from AI assistant if available
-	if (aiSettings.endpoint) {
-		$('#bulk-ai-endpoint').val(aiSettings.endpoint);
-		$('#bulk-ai-api-key').val(aiSettings.apiKey);
-		$('#bulk-ai-model').val(aiSettings.model);
-		$('#bulk-ai-reasoning').val(aiSettings.reasoningEffort);
-		$('#bulk-ai-verbosity').val(aiSettings.verbosity);
-	}
+	// Open AI Bulk Input Modal
+	$('#ai-bulk-input-btn').on('click', function () {
+		// Load settings from AI assistant if available
+		if (aiSettings.endpoint) {
+			let endpoint = aiSettings.endpoint;
+			let deployment = '';
 
-	// Clear previous files
-	bulkInputFiles = [];
-	$('#file-list').empty();
+			// Try to extract base URL and deployment name if full URL is provided
+			// Format: https://{resource}.openai.azure.com/openai/deployments/{deployment}/...
+			const deploymentMatch = endpoint.match(/\/openai\/deployments\/([^/]+)/);
+			if (deploymentMatch) {
+				deployment = deploymentMatch[1];
+				// Extract base URL (remove everything after .com)
+				const baseUrlMatch = endpoint.match(/(https:\/\/[^/]+\.openai\.azure\.com)/);
+				if (baseUrlMatch) {
+					endpoint = baseUrlMatch[1];
+				}
+			}
 
-	// Show modal
-	$('#aiBulkInputModal').modal('show');
-});
+			$('#bulk-ai-endpoint').val(endpoint);
+			$('#bulk-ai-api-key').val(aiSettings.apiKey);
+			if (deployment) {
+				$('#bulk-ai-deployment').val(deployment);
+			} else if (aiSettings.model && !aiSettings.model.startsWith('gpt-')) {
+				// If model name looks like a deployment name (not just 'gpt-5'), suggest it
+				$('#bulk-ai-deployment').val(aiSettings.model);
+			}
 
-// File selection button
-$('#select-files-btn').on('click', function () {
-	$('#bulk-file-input').click();
-});
+			// Set model if it matches options
+			if ($(`#bulk-ai-model option[value="${aiSettings.model}"]`).length > 0) {
+				$('#bulk-ai-model').val(aiSettings.model);
+			}
 
-// File input change
-$('#bulk-file-input').on('change', function (e) {
-	handleFiles(e.target.files);
-});
+			$('#bulk-ai-reasoning').val(aiSettings.reasoningEffort);
+			$('#bulk-ai-verbosity').val(aiSettings.verbosity);
+		}
 
-// Drag and drop
-$('#file-drop-zone').on('click', function () {
-	$('#bulk-file-input').click();
-});
+		// Clear previous files
+		bulkInputFiles = [];
+		$('#file-list').empty();
 
-$('#file-drop-zone').on('dragover', function (e) {
-	e.preventDefault();
-	e.stopPropagation();
-	$(this).addClass('bg-light');
-});
+		// Show modal
+		$('#aiBulkInputModal').modal('show');
+	});
 
-$('#file-drop-zone').on('dragleave', function (e) {
-	e.preventDefault();
-	e.stopPropagation();
-	$(this).removeClass('bg-light');
-});
+	// File selection button
+	$('#select-files-btn').on('click', function () {
+		$('#bulk-file-input').click();
+	});
 
-$('#file-drop-zone').on('drop', function (e) {
-	e.preventDefault();
-	e.stopPropagation();
-	$(this).removeClass('bg-light');
+	// File input change
+	$('#bulk-file-input').on('change', function (e) {
+		handleFiles(e.target.files);
+	});
 
-	const files = e.originalEvent.dataTransfer.files;
-	handleFiles(files);
-});
+	// Drag and drop
+	$('#file-drop-zone').on('click', function () {
+		$('#bulk-file-input').click();
+	});
 
-function handleFiles(files) {
-	for (let i = 0; i < files.length; i++) {
-		const file = files[i];
-		bulkInputFiles.push(file);
+	$('#file-drop-zone').on('dragover', function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+		$(this).addClass('bg-light');
+	});
 
-		// Display file in list
-		const fileItem = $(`
+	$('#file-drop-zone').on('dragleave', function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+		$(this).removeClass('bg-light');
+	});
+
+	$('#file-drop-zone').on('drop', function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+		$(this).removeClass('bg-light');
+
+		const files = e.originalEvent.dataTransfer.files;
+		handleFiles(files);
+	});
+
+	function handleFiles(files) {
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
+			bulkInputFiles.push(file);
+
+			// Display file in list
+			const fileItem = $(`
 			<div class="file-item d-flex justify-content-between align-items-center p-2 border rounded mb-2" data-index="${bulkInputFiles.length - 1}">
 				<div>
 					<i class="fas fa-file mr-2"></i>
@@ -962,228 +988,309 @@ function handleFiles(files) {
 			</div>
 		`);
 
-		$('#file-list').append(fileItem);
+			$('#file-list').append(fileItem);
+		}
 	}
-}
 
-// Remove file
-$(document).on('click', '.remove-file-btn', function () {
-	const fileItem = $(this).closest('.file-item');
-	const index = parseInt(fileItem.attr('data-index'));
+	// Remove file
+	$(document).on('click', '.remove-file-btn', function () {
+		const fileItem = $(this).closest('.file-item');
+		const index = parseInt(fileItem.attr('data-index'));
 
-	bulkInputFiles.splice(index, 1);
-	fileItem.remove();
+		bulkInputFiles.splice(index, 1);
+		fileItem.remove();
 
-	// Update indices
-	$('.file-item').each(function (i) {
-		$(this).attr('data-index', i);
+		// Update indices
+		$('.file-item').each(function (i) {
+			$(this).attr('data-index', i);
+		});
 	});
-});
 
-// Execute bulk input
-$('#execute-bulk-input-btn').on('click', async function () {
-	const endpoint = $('#bulk-ai-endpoint').val().trim();
-	const apiKey = $('#bulk-ai-api-key').val().trim();
-	const model = $('#bulk-ai-model').val();
-	const reasoning = $('#bulk-ai-reasoning').val();
-	const verbosity = $('#bulk-ai-verbosity').val();
-	const textInput = $('#bulk-text-input').val().trim();
-	const additionalInstructions = $('#bulk-additional-instructions').val().trim();
+	// Execute bulk input
+	$('#execute-bulk-input-btn').on('click', async function () {
+		const endpoint = $('#bulk-ai-endpoint').val().trim();
+		const apiKey = $('#bulk-ai-api-key').val().trim();
+		const deployment = $('#bulk-ai-deployment').val().trim();
+		const model = $('#bulk-ai-model').val();
+		const reasoning = $('#bulk-ai-reasoning').val();
+		const verbosity = $('#bulk-ai-verbosity').val();
+		const textInput = $('#bulk-text-input').val().trim();
+		const additionalInstructions = $('#bulk-additional-instructions').val().trim();
 
-	if (!endpoint || !apiKey) {
-		alert('Azure OpenAI エンドポイントとAPIキーを入力してください。');
-		return;
-	}
+		if (!endpoint || !apiKey || !deployment) {
+			alert('Azure OpenAI エンドポイント、APIキー、デプロイメント名を入力してください。');
+			return;
+		}
 
-	try {
-		$(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 処理中...');
-
-		// Read file contents
-		const fileContents = await readAllFiles();
-
-		// Get current sheet data
-		updateSpec();
-		const currentSheet = JSON.parse($('#data-sheetspec').text());
-
-		// Call AI API
-		const result = await callBulkInputAI(endpoint, apiKey, model, reasoning, verbosity, currentSheet, fileContents, textInput, additionalInstructions);
-
-		// Apply results to sheet
-		applyBulkInputResults(result);
-
-		// Close modal
-		$('#aiBulkInputModal').modal('hide');
-
-		alert('AI一括入力が完了しました。');
-	} catch (error) {
-		console.error('Bulk input error:', error);
-		alert('エラーが発生しました: ' + error.message);
-	} finally {
-		$(this).prop('disabled', false).html('実行');
-	}
-});
-
-async function readAllFiles() {
-	const contents = [];
-
-	for (const file of bulkInputFiles) {
 		try {
-			const content = await readFileContent(file);
-			contents.push({
-				name: file.name,
-				type: file.type,
-				content: content
-			});
+			$(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 処理中...');
+
+			// Read file contents
+			const fileContents = await readAllFiles();
+
+			// Get current sheet data
+			updateSpec();
+			const currentSheet = JSON.parse($('#data-sheetspec').text());
+
+			// Call AI API
+			const result = await callBulkInputAI(endpoint, apiKey, deployment, model, reasoning, verbosity, currentSheet, fileContents, textInput, additionalInstructions);
+
+			// Apply results to sheet
+			applyBulkInputResults(result);
+
+			// Close modal
+			$('#aiBulkInputModal').modal('hide');
+
+			alert('AI一括入力が完了しました。');
 		} catch (error) {
-			console.error(`Error reading file ${file.name}:`, error);
-		}
-	}
-
-	return contents;
-}
-
-function readFileContent(file) {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-
-		reader.onload = function (e) {
-			if (file.type.startsWith('image/')) {
-				// For images, use base64
-				resolve(e.target.result);
-			} else {
-				// For text files
-				resolve(e.target.result);
-			}
-		};
-
-		reader.onerror = function () {
-			reject(new Error(`Failed to read file: ${file.name}`));
-		};
-
-		if (file.type.startsWith('image/')) {
-			reader.readAsDataURL(file);
-		} else {
-			reader.readAsText(file);
+			console.error('Bulk input error:', error);
+			alert('エラーが発生しました: ' + error.message);
+		} finally {
+			$(this).prop('disabled', false).html('実行');
 		}
 	});
-}
 
-async function callBulkInputAI(endpoint, apiKey, model, reasoning, verbosity, currentSheet, fileContents, textInput, additionalInstructions) {
-	// Build prompt
-	const systemPrompt = buildBulkInputPrompt(currentSheet, fileContents, textInput, additionalInstructions);
+	async function readAllFiles() {
+		const contents = [];
 
-	const messages = [
-		{
-			role: 'system',
-			content: systemPrompt
-		},
-		{
-			role: 'user',
-			content: 'シートの各フィールドに適切な内容を入力してください。'
+		for (const file of bulkInputFiles) {
+			try {
+				const content = await readFileContent(file);
+				contents.push({
+					name: file.name,
+					type: file.type,
+					content: content
+				});
+			} catch (error) {
+				console.error(`Error reading file ${file.name}:`, error);
+			}
 		}
-	];
 
-	const response = await fetch(`${endpoint}/chat/completions?api-version=2024-12-01-preview`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'api-key': apiKey
-		},
-		body: JSON.stringify({
-			model: model,
-			messages: messages,
-			reasoning_effort: reasoning,
-			verbosity: verbosity,
-			response_format: {
-				type: 'json_schema',
-				json_schema: {
-					name: 'bulk_input_result',
-					strict: true,
-					schema: {
-						type: 'object',
-						properties: {
-							fields: {
-								type: 'object',
-								additionalProperties: {
-									type: 'string'
-								}
-							}
-						},
-						required: ['fields'],
-						additionalProperties: false
-					}
+		return contents;
+	}
+
+	function readFileContent(file) {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+
+			reader.onload = function (e) {
+				if (file.type.startsWith('image/')) {
+					// For images, use base64
+					resolve(e.target.result);
+				} else {
+					// For text files
+					resolve(e.target.result);
 				}
-			}
-		})
-	});
+			};
 
-	if (!response.ok) {
-		throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-	}
+			reader.onerror = function () {
+				reject(new Error(`Failed to read file: ${file.name}`));
+			};
 
-	const data = await response.json();
-	const content = data.choices[0].message.content;
-	const result = JSON.parse(content);
-
-	return result.fields;
-}
-
-function buildBulkInputPrompt(currentSheet, fileContents, textInput, additionalInstructions) {
-	let prompt = 'あなたは教育用の打ち合わせシート入力アシスタントです。\n\n';
-
-	prompt += '【シート構造】\n';
-	prompt += 'シートには以下のフィールドがあります：\n';
-	currentSheet['sheet-content'].forEach(item => {
-		if (item.type === 'terminal') {
-			const currentValue = item.form['form-main-answer'] || '';
-			prompt += `- ${item.id} (${item.name}): ${item.form.description || ''} [現在値: ${currentValue}]\n`;
-		}
-	});
-
-	prompt += '\n【提供された情報】\n';
-
-	if (fileContents.length > 0) {
-		prompt += 'ファイル内容:\n';
-		fileContents.forEach(file => {
-			prompt += `\n--- ${file.name} ---\n`;
 			if (file.type.startsWith('image/')) {
-				prompt += '[画像ファイル]\n';
+				reader.readAsDataURL(file);
 			} else {
-				prompt += file.content + '\n';
+				reader.readAsText(file);
 			}
 		});
 	}
 
-	if (textInput) {
-		prompt += '\nテキスト入力:\n' + textInput + '\n';
-	}
+	async function callBulkInputAI(endpoint, apiKey, deployment, model, reasoning, verbosity, currentSheet, fileContents, textInput, additionalInstructions) {
+		// Build prompt
+		const systemPrompt = buildBulkInputPrompt(currentSheet, fileContents, textInput, additionalInstructions);
 
-	if (additionalInstructions) {
-		prompt += '\n【追加指示】\n' + additionalInstructions + '\n';
-	}
+		const messages = [
+			{
+				role: 'system',
+				content: systemPrompt
+			},
+			{
+				role: 'user',
+				content: 'シートの各フィールドに適切な内容を入力してください。'
+			}
+		];
 
-	prompt += '\n上記の情報を基に、シートの各フィールドに適切な内容を入力してください。\n';
-	prompt += 'フィールドIDをキーとし、入力内容を値とするJSONオブジェクトで返してください。\n';
+		const response = await fetch(`${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=2024-12-01-preview`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'api-key': apiKey
+			},
+			body: JSON.stringify({
+				model: model,
+				messages: messages,
+				max_completion_tokens: 16384,
+				reasoning_effort: reasoning,
+				verbosity: verbosity,
+				response_format: {
+					type: 'json_object'
+				}
+			})
+		});
 
-	return prompt;
-}
-
-function applyBulkInputResults(results) {
-	// Apply each field value
-	for (const [fieldId, value] of Object.entries(results)) {
-		const fieldElement = $(`#${fieldId}`).find('.form-control').first();
-		if (fieldElement.length > 0) {
-			fieldElement.val(value);
-			fieldElement.trigger('change');
+		if (!response.ok) {
+			throw new Error(`API request failed: ${response.status} ${response.statusText}`);
 		}
+
+		const data = await response.json();
+		const content = data.choices[0].message.content;
+		const result = JSON.parse(content);
+
+		// Support both { fields: {...} } and direct {...} formats
+		return result.fields || result;
 	}
 
-	// Update spec and save state for undo/redo
-	setTimeout(() => {
-		updateSpec();
-		saveState();
-	}, 1000);
-}
+	function buildBulkInputPrompt(currentSheet, fileContents, textInput, additionalInstructions) {
+		let prompt = 'あなたは教育用の打ち合わせシート入力アシスタントです。\n\n';
+
+		prompt += '【シート構造】\n';
+		prompt += 'シートには以下のフィールドがあります。各フィールドについて、適切な入力内容を決定してください。\n';
+		currentSheet['sheet-content'].forEach(item => {
+			if (item.type === 'terminal') {
+				const currentValue = item.form['form-main-answer'] || '';
+				let options = '';
+				if (item.form['form-main'] === 'select' || item.form['form-main'] === 'checkbox' || item.form['form-main'] === 'radio') {
+					options = ` (選択肢: ${item.form['form-main-option']})`;
+				}
+				prompt += `- ${item.id} (${item.name}): ${item.form.description || ''}${options} [現在値: ${currentValue}]\n`;
+			}
+		});
+
+		prompt += '\n【提供された情報】\n';
+
+		if (fileContents.length > 0) {
+			prompt += 'ファイル内容:\n';
+			fileContents.forEach(file => {
+				prompt += `\n--- ${file.name} ---\n`;
+				if (file.type.startsWith('image/')) {
+					prompt += '[画像ファイル]\n';
+				} else {
+					prompt += file.content + '\n';
+				}
+			});
+		}
+
+		if (textInput) {
+			prompt += '\nテキスト入力:\n' + textInput + '\n';
+		}
+
+		if (additionalInstructions) {
+			prompt += '\n【追加指示】\n' + additionalInstructions + '\n';
+		}
+
+		prompt += '\n【出力指示】\n';
+		prompt += '以下のJSON形式で出力してください：\n';
+		prompt += '{\n';
+		prompt += '  "FIELD_ID": {\n';
+		prompt += '    "main": "選択肢の値（完全一致）または自由記述の内容",\n';
+		prompt += '    "sub": "詳細欄への入力内容（選択肢に収まらない補足情報など）"\n';
+		prompt += '  }\n';
+		prompt += '}\n\n';
+		prompt += '重要：\n';
+		prompt += '1. 選択肢（select, radio, checkbox）のある項目は、**必ず提供された選択肢リストから一字一句正確に**選んで"main"に入れてください。\n';
+		prompt += '   - 選択肢の表記を変えないでください（例：「中学3年生」ではなく「中3」）。\n';
+		prompt += '2. checkboxの場合は、"main"に選択された値の配列を入れてください（例: ["選択肢A", "選択肢B"]）。文字列で"/ "区切りにしないでください。\n';
+		prompt += '3. 選択肢に完全に合致しない場合や、補足情報がある場合は、積極的に"sub"（詳細欄）に入力してください。\n';
+		prompt += '4. 入力すべき情報がないフィールドはJSONに含めなくて構いません。\n';
+
+		return prompt;
+	}
+
+	function applyBulkInputResults(results) {
+		// Apply each field value
+		for (const [key, value] of Object.entries(results)) {
+			// Clean up key: "A-01 (学年)" -> "A-01"
+			// Take the part before the first space or parenthesis
+			let fieldId = key.split(/[\s(]/)[0];
+
+			// Escape selector to handle special characters if any
+			// Note: $.escapeSelector requires jQuery 3.0+, ensure it's available or use robust implementation
+			// If $.escapeSelector is not available (older jQuery), simple escaping or just using as is might be needed.
+			// Assuming standard bootstrap/jquery environment.
+			let selector;
+			try {
+				selector = '#' + $.escapeSelector(fieldId);
+			} catch (e) {
+				// Fallback for older jQuery or simple ID
+				selector = '#' + fieldId;
+			}
+
+			const fieldWrapper = $(selector);
+			if (fieldWrapper.length === 0) {
+				console.warn(`Field not found for key: ${key} (ID: ${fieldId})`);
+				continue;
+			}
+
+			// Parse main and sub values
+			let mainValue = value;
+			let subValue = '';
+
+			if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+				// Structured output { main: ..., sub: ... }
+				mainValue = value.main;
+				subValue = value.sub || '';
+			}
+
+			// 1. Handle Main Input
+			const checkboxInputs = fieldWrapper.find('.form-check-input[type="checkbox"]');
+			const radioInputs = fieldWrapper.find('.form-check-input[type="radio"]');
+
+			if (checkboxInputs.length > 0) {
+				// Checkbox handling
+				// Ensure mainValue is array
+				let checkedValues = [];
+				if (Array.isArray(mainValue)) {
+					checkedValues = mainValue;
+				} else if (typeof mainValue === 'string') {
+					checkedValues = [mainValue];
+				}
+
+				// Uncheck all first
+				checkboxInputs.prop('checked', false);
+
+				// Check matching items
+				checkedValues.forEach(val => {
+					// Use exact match
+					fieldWrapper.find(`.form-check-input[value="${val}"]`).prop('checked', true);
+				});
+
+				// Trigger change on the first one (or wrapper if possible) to update internal state?
+				// general.js implementation of getFormAnswer iterates over checked elements, so just checking is enough?
+				// But we might need to trigger change for UI updates or other listeners?
+				// general.js doesn't seem to have specific listener for change on checkboxes that updates spec immediately except updateSpec call?
+				// Actually applyBulkInputResults calls updateSpec at the end.
+			} else if (radioInputs.length > 0) {
+				// Radio handling
+				radioInputs.prop('checked', false);
+				if (mainValue) {
+					fieldWrapper.find(`.form-check-input[value="${mainValue}"]`).prop('checked', true);
+				}
+			} else {
+				// Text / Select / Textarea
+				const fieldElement = fieldWrapper.find('.form-main .form-control').first();
+				if (fieldElement.length > 0) {
+					// Direct assignment as AI is instructed to use exact match
+					fieldElement.val(mainValue);
+					fieldElement.trigger('change');
+				}
+			}
+
+			// 2. Handle Sub Input (Details)
+			if (subValue) {
+				const subFieldElement = fieldWrapper.find('.form-sub .form-control').first();
+				if (subFieldElement.length > 0) {
+					subFieldElement.val(subValue);
+					subFieldElement.trigger('change');
+				}
+			}
+		}
+
+		// Update spec and save state for undo/redo
+		setTimeout(() => {
+			updateSpec();
+			saveState();
+		}, 1000);
+	}
 
 
 	// Hide AI assistant in customization mode

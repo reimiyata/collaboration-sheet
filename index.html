@@ -309,21 +309,31 @@
 							<label>Azure OpenAI エンドポイント</label>
 							<input type="text" class="form-control" id="bulk-ai-endpoint"
 								placeholder="https://your-resource.openai.azure.com/">
-							<small class="form-text text-muted">デプロイメント名を含むエンドポイントURLを入力してください</small>
+							<small class="form-text text-muted">Azure OpenAIリソースのベースURL（例:
+								https://your-resource.openai.azure.com）</small>
 						</div>
 						<div class="form-group">
 							<label>APIキー</label>
 							<input type="password" class="form-control" id="bulk-ai-api-key" placeholder="••••••••">
 						</div>
 						<div class="form-row">
-							<div class="form-group col-md-4">
-								<label>モデル</label>
-								<select class="form-control" id="bulk-ai-model">
-									<option value="gpt-5">GPT-5</option>
-									<option value="gpt-5.1">GPT-5.1</option>
-									<option value="gpt-5.2">GPT-5.2</option>
-								</select>
+							<div class="form-group col-md-6">
+								<label>デプロイメント名</label>
+								<input type="text" class="form-control" id="bulk-ai-deployment"
+									placeholder="例: gpt-5-bookreach">
+								<small class="form-text text-muted">Azure OpenAIで作成したデプロイメント名</small>
 							</div>
+							<div class="form-group col-md-6">
+								<label>モデル名</label>
+								<select class="form-control" id="bulk-ai-model">
+									<option value="gpt-5">gpt-5</option>
+									<option value="gpt-5.1">gpt-5.1</option>
+									<option value="gpt-5.2">gpt-5.2</option>
+								</select>
+								<small class="form-text text-muted">リクエストボディに含めるモデル名</small>
+							</div>
+						</div>
+						<div class="form-row">
 							<div class="form-group col-md-4">
 								<label>推論量</label>
 								<select class="form-control" id="bulk-ai-reasoning">
