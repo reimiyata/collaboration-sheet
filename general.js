@@ -302,7 +302,7 @@ $(document).on('click', '#display-prior', function () {
       $(element).addClass("hidden");
     }
   });
-  $(this).text("全項目を表示");
+  $(this).text("全項目");
   $(this).attr("id", "display-all");
   $(this).addClass("btn-warning");
   $(this).removeClass("btn-secondary");
@@ -313,7 +313,7 @@ $(document).on('click', '#display-all', function () {
   $(".hearing-each-wrap").each(function (index, element) {
     $(element).removeClass("hidden");
   });
-  $(this).text("* 事前入力推奨項目のみを表示");
+  $(this).text("* 事前入力項目");
   $(this).attr("id", "display-prior");
   $(this).addClass("btn-secondary");
   $(this).removeClass("btn-warning");
