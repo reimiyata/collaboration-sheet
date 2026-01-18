@@ -1069,8 +1069,52 @@ $(document).ready(function () {
 		return contents;
 	}
 
+	// PDF.js worker setup
+	// Ensure this runs after the library is loaded
+	if (typeof pdfjsLib !== 'undefined') {
+		pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+	}
+
+	async function readPdfAsImages(file) {
+		if (typeof pdfjsLib === 'undefined') {
+			throw new Error('PDF.js library is not loaded.');
+		}
+
+		const arrayBuffer = await file.arrayBuffer();
+		const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+		const images = [];
+
+		// Limit pages if necessary to avoid too many images (e.g. max 10 pages)
+		// For now, process all pages as requested.
+		for (let i = 1; i <= pdf.numPages; i++) {
+			const page = await pdf.getPage(i);
+			// Scale 2.0 provides good quality for text readability
+			const viewport = page.getViewport({ scale: 2.0 });
+			const canvas = document.createElement('canvas');
+			const context = canvas.getContext('2d');
+			canvas.height = viewport.height;
+			canvas.width = viewport.width;
+
+			await page.render({
+				canvasContext: context,
+				viewport: viewport
+			}).promise;
+
+			// Convert to JPEG with high quality
+			images.push(canvas.toDataURL('image/jpeg', 0.9));
+		}
+		return images;
+	}
+
 	function readFileContent(file) {
 		return new Promise((resolve, reject) => {
+			if (file.type === 'application/pdf') {
+				readPdfAsImages(file)
+					.then(images => resolve(images))
+					.catch(error => reject(error));
+				return;
+			}
+
 			const reader = new FileReader();
 
 			reader.onload = function (e) {
@@ -1096,8 +1140,38 @@ $(document).ready(function () {
 	}
 
 	async function callBulkInputAI(endpoint, apiKey, deployment, model, reasoning, verbosity, currentSheet, fileContents, textInput, additionalInstructions) {
-		// Build prompt
-		const systemPrompt = buildBulkInputPrompt(currentSheet, fileContents, textInput, additionalInstructions);
+		// Prepare content for multimodal request
+
+		// 1. Filter text files for system prompt
+		const textFiles = fileContents.filter(f => !f.type.startsWith('image/') && f.type !== 'application/pdf');
+
+		// 2. Build system prompt with only text content
+		const systemPrompt = buildBulkInputPrompt(currentSheet, textFiles, textInput, additionalInstructions);
+
+		// 3. Construct User Message Content
+		const userContent = [];
+		userContent.push({
+			type: 'text',
+			text: '添付された資料（画像、PDF含む）の内容を読み取り、シートの各フィールドに最も適切な内容を入力してください。'
+		});
+
+		// 4. Add Images and PDF pages
+		fileContents.forEach(file => {
+			if (file.type.startsWith('image/')) {
+				userContent.push({
+					type: 'image_url', // Azure OpenAI / OpenAI compatible
+					image_url: { url: file.content }
+				});
+			} else if (file.type === 'application/pdf' && Array.isArray(file.content)) {
+				// PDF pages converted to base64 images
+				file.content.forEach(pageDataUrl => {
+					userContent.push({
+						type: 'image_url',
+						image_url: { url: pageDataUrl }
+					});
+				});
+			}
+		});
 
 		const messages = [
 			{
@@ -1106,7 +1180,7 @@ $(document).ready(function () {
 			},
 			{
 				role: 'user',
-				content: 'シートの各フィールドに適切な内容を入力してください。'
+				content: userContent
 			}
 		];
 
@@ -1159,15 +1233,16 @@ $(document).ready(function () {
 		prompt += '\n【提供された情報】\n';
 
 		if (fileContents.length > 0) {
-			prompt += 'ファイル内容:\n';
+			prompt += 'テキストファイル内容:\n';
 			fileContents.forEach(file => {
+				// Since logic in callBulkInputAI already filters non-text files out of fileContents passed here,
+				// we can just append them. But double check logic to be safe.
+				// Actually callBulkInputAI passes only textFiles to this function now.
 				prompt += `\n--- ${file.name} ---\n`;
-				if (file.type.startsWith('image/')) {
-					prompt += '[画像ファイル]\n';
-				} else {
-					prompt += file.content + '\n';
-				}
+				prompt += file.content + '\n';
 			});
+		} else {
+			prompt += '(テキストファイルはありません。画像/PDF資料を参照してください)\n';
 		}
 
 		if (textInput) {
