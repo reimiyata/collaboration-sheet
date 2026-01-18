@@ -16,7 +16,7 @@ let aiSettings = {
 let chatHistory = [];
 let historyStack = [];
 let historyIndex = -1;
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 100;
 let isProcessing = false;
 
 // Speech recognition
@@ -671,8 +671,16 @@ function redo() {
 }
 
 function updateUndoRedoButtons() {
-	$('#ai-undo-btn').prop('disabled', historyIndex <= 0);
-	$('#ai-redo-btn').prop('disabled', historyIndex >= historyStack.length - 1);
+	const canUndo = historyIndex > 0;
+	const canRedo = historyIndex < historyStack.length - 1;
+
+	// Update AI assistant buttons
+	$('#ai-undo-btn').prop('disabled', !canUndo);
+	$('#ai-redo-btn').prop('disabled', !canRedo);
+
+	// Update main menu buttons
+	$('#main-undo-btn').prop('disabled', !canUndo);
+	$('#main-redo-btn').prop('disabled', !canRedo);
 }
 
 // ========================================
@@ -823,9 +831,33 @@ $(document).ready(function () {
 		toggleSpeechRecognition();
 	});
 
-	// Undo/Redo
+	// Undo/Redo (AI assistant buttons)
 	$('#ai-undo-btn').on('click', undo);
 	$('#ai-redo-btn').on('click', redo);
+
+	// Undo/Redo (main menu buttons)
+	$('#main-undo-btn').on('click', undo);
+	$('#main-redo-btn').on('click', redo);
+
+	// Track manual input changes for undo/redo
+	// Use debounce to avoid saving state too frequently
+	let inputTimeout;
+	$(document).on('change', '.form-control, .form-check-input', function () {
+		clearTimeout(inputTimeout);
+		inputTimeout = setTimeout(() => {
+			updateSpec();
+			saveState();
+		}, 500); // Wait 500ms after last change before saving
+	});
+
+	// Track dropdown selection for undo/redo
+	$(document).on('click', 'a.hearing-item-option', function () {
+		clearTimeout(inputTimeout);
+		inputTimeout = setTimeout(() => {
+			updateSpec();
+			saveState();
+		}, 500); // Wait 500ms after selection before saving
+	});
 
 	// Hide AI assistant in customization mode
 	// (This will be called from customization.js)
