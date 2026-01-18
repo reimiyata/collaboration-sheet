@@ -327,8 +327,254 @@ function initializeChat() {
 	$('#ai-chat-messages').empty();
 	chatHistory = [];
 
-	// Greeting message
-	addMessage('こんにちは！ BRIDGE AIアシスタントです。先生と司書をつなぐお手伝いをします。\n\n授業についていくつか質問させてください。まず、何年生向けの授業を考えていますか？', 'ai');
+	// Update spec to sync form values to JSON before analysis
+	updateSpec();
+
+	// Analyze current sheet data to generate context-aware greeting
+	const sheetAnalysis = analyzeSheetData();
+	const greeting = generateInitialGreeting(sheetAnalysis);
+
+	addMessage(greeting, 'ai');
+
+	// Send initial question after a brief delay
+	setTimeout(() => {
+		sendInitialQuestion();
+	}, 500);
+}
+
+// Analyze current sheet data to determine what's filled and what's missing
+function analyzeSheetData() {
+	const spec = JSON.parse($('#data-sheetspec').html());
+	const content = spec['sheet-content'];
+
+	const analysis = {
+		filledFields: [],
+		emptyPriorityFields: [],
+		totalFields: 0,
+		filledCount: 0
+	};
+
+	content.forEach(item => {
+		if (item.type === 'terminal') {
+			analysis.totalFields++;
+
+			const hasAnswer = item.form['form-main-answer'] && item.form['form-main-answer'].trim() !== '';
+
+			if (hasAnswer) {
+				analysis.filledCount++;
+				analysis.filledFields.push({
+					id: item.id,
+					name: item.name,
+					value: item.form['form-main-answer']
+				});
+			} else if (item.form.prior === 1) {
+				analysis.emptyPriorityFields.push({
+					id: item.id,
+					name: item.name,
+					options: item.form['form-main-option']
+				});
+			}
+		}
+	});
+
+	return analysis;
+}
+
+// Generate initial greeting based on sheet analysis
+function generateInitialGreeting(analysis) {
+	// Simple initial greeting
+	const greeting = 'こんにちは！ BRIDGE AIアシスタントです。先生と司書をつなぐお手伝いをします。\n\n授業についていくつか質問させてください。';
+
+	// Store analysis for follow-up question
+	window._sheetAnalysis = analysis;
+
+	return greeting;
+}
+
+// Generate and send first question using AI based on sheet analysis
+async function sendInitialQuestion() {
+	const analysis = window._sheetAnalysis;
+	if (!analysis) return;
+
+	try {
+		showLoading();
+		const question = await generateAIInitialQuestion(analysis);
+		hideLoading();
+
+		// Add AI message with the question
+		addMessage(question, 'ai');
+
+		// Add to chat history as if AI sent it
+		chatHistory.push({
+			role: 'assistant',
+			content: JSON.stringify({
+				message: question,
+				updates: []
+			}),
+			timestamp: new Date().toISOString()
+		});
+	} catch (error) {
+		hideLoading();
+		console.error('Failed to generate initial question:', error);
+
+		// Fallback to simple question
+		const fallbackQuestion = 'まず、何年生向けの授業を考えていますか？';
+		addMessage(fallbackQuestion, 'ai');
+		chatHistory.push({
+			role: 'assistant',
+			content: JSON.stringify({
+				message: fallbackQuestion,
+				updates: []
+			}),
+			timestamp: new Date().toISOString()
+		});
+	}
+}
+
+// Generate AI-powered question based on sheet analysis
+async function generateAIInitialQuestion(analysis) {
+	if (!validateSettings()) {
+		throw new Error('AI settings not configured');
+	}
+
+	// Build context about current sheet state
+	let context = `【現在のシート状態】\n`;
+	context += `- 総フィールド数: ${analysis.totalFields}\n`;
+	context += `- 入力済み: ${analysis.filledCount}\n`;
+
+	if (analysis.filledFields.length > 0) {
+		context += `- 入力済みフィールド:\n`;
+		analysis.filledFields.forEach(field => {
+			context += `  - ${field.name}: ${field.value}\n`;
+		});
+	}
+
+	if (analysis.emptyPriorityFields.length > 0) {
+		context += `- 未入力の優先フィールド:\n`;
+		analysis.emptyPriorityFields.forEach(field => {
+			context += `  - ${field.name}`;
+			if (field.options) {
+				context += ` (選択肢: ${field.options})`;
+			}
+			context += `\n`;
+		});
+	}
+
+	const systemPrompt = `あなたはBRIDGE AIアシスタントです。教員との対話を通じて授業の打ち合わせシートを埋めていきます。
+
+${context}
+
+【あなたの役割】
+シートの現在の状態を分析し、次に何を質問すべきか判断してください。
+
+【質問作成のガイドライン】
+1. すでに入力されている情報は簡潔に確認する（任意）
+2. 未入力の優先項目から最も重要なものを1つ選ぶ
+3. 自然で親しみやすい質問にする
+4. 選択肢がある場合は提示する
+5. 一度に1つか2つの質問のみ
+6. 簡潔に（2-3文程度）
+
+【出力形式】
+必ずJSON形式で返してください:
+{
+  "message": "質問内容"
+}`;
+
+	const messages = [
+		{ role: 'system', content: systemPrompt },
+		{ role: 'user', content: '最初の質問を生成してください。' }
+	];
+
+	const response = await fetch(`${aiSettings.endpoint}/chat/completions?api-version=2024-12-01-preview`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'api-key': aiSettings.apiKey
+		},
+		body: JSON.stringify({
+			model: aiSettings.model,
+			messages: messages,
+			reasoning_effort: aiSettings.reasoningEffort,
+			verbosity: aiSettings.verbosity,
+			response_format: {
+				type: 'json_schema',
+				json_schema: {
+					name: 'initial_question',
+					strict: true,
+					schema: {
+						type: 'object',
+						properties: {
+							message: {
+								type: 'string',
+								description: 'ユーザーへの質問'
+							}
+						},
+						required: ['message'],
+						additionalProperties: false
+					}
+				}
+			}
+		})
+	});
+
+	if (!response.ok) {
+		const errorText = await response.text();
+		throw new Error(`API Error: ${response.status} - ${errorText}`);
+	}
+
+	const data = await response.json();
+	const aiResponse = JSON.parse(data.choices[0].message.content);
+
+	return aiResponse.message;
+}
+
+
+// Generate and send follow-up question when reopening chat
+async function sendFollowUpQuestion(analysis) {
+	try {
+		showLoading();
+		const question = await generateAIInitialQuestion(analysis);
+		hideLoading();
+
+		// Add AI message with the question
+		addMessage(question, 'ai');
+
+		// Add to chat history
+		chatHistory.push({
+			role: 'assistant',
+			content: JSON.stringify({
+				message: question,
+				updates: []
+			}),
+			timestamp: new Date().toISOString()
+		});
+	} catch (error) {
+		hideLoading();
+		console.error('Failed to generate follow-up question:', error);
+
+		// Fallback to simple question
+		let fallbackQuestion = '';
+		if (analysis.emptyPriorityFields.length > 0) {
+			const nextField = analysis.emptyPriorityFields[0];
+			fallbackQuestion = `${nextField.name}について教えてください。`;
+			if (nextField.options) {
+				fallbackQuestion += `\n選択肢: ${nextField.options}`;
+			}
+		} else {
+			fallbackQuestion = '他に追加・修正したい情報があれば教えてください。';
+		}
+
+		addMessage(fallbackQuestion, 'ai');
+		chatHistory.push({
+			role: 'assistant',
+			content: JSON.stringify({
+				message: fallbackQuestion,
+				updates: []
+			}),
+			timestamp: new Date().toISOString()
+		});
+	}
 }
 
 function addMessage(text, sender) {
@@ -522,7 +768,18 @@ $(document).ready(function () {
 	$('#ai-assistant-btn').on('click', function () {
 		$('#ai-chat-window').removeClass('ai-chat-hidden');
 		if (chatHistory.length === 0) {
+			// First time opening - show initial greeting and question
 			initializeChat();
+		} else {
+			// Reopening - sync form values and analyze current sheet
+			updateSpec();
+			const sheetAnalysis = analyzeSheetData();
+			if (sheetAnalysis.emptyPriorityFields.length > 0 || sheetAnalysis.filledCount < sheetAnalysis.totalFields) {
+				// There are still fields to fill - send a follow-up question
+				setTimeout(() => {
+					sendFollowUpQuestion(sheetAnalysis);
+				}, 300);
+			}
 		}
 	});
 
