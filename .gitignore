@@ -1,0 +1,27 @@
+# Backups and temporary files
+*.bak*
+*.backup
+*.tmp
+*.swp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Programming languages / environments
+__pycache__/
+*.py[cod]
+*$py.class
+node_modules/
+.env
