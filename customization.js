@@ -621,8 +621,32 @@ $(document).ready(function () {
 		$('#menu-wrap').prepend(toggleBtn);
 	}
 
+	// シート管理情報トグルボタンを追加
+	if ($('#toggle-sheet-info').length === 0) {
+		let toggleInfoBtn = $(`
+      <div class="small menu-item">
+        <span id="toggle-sheet-info" class="btn btn-sm btn-outline-secondary" style="cursor: pointer;">
+          ▼シート管理情報
+        </span>
+      </div>
+    `);
+		$('#menu-wrap').prepend(toggleInfoBtn);
+	}
+
 	// カスタマイズモード切り替え
 	$(document).on('click', '#toggle-customization-mode', toggleCustomizationMode);
+
+	// シート管理情報トグル
+	$(document).on('click', '#toggle-sheet-info', function () {
+		let infoWrap = $('#basic-info-wrap');
+		if (infoWrap.is(':visible')) {
+			infoWrap.hide();
+			$(this).text('▶シート管理情報');
+		} else {
+			infoWrap.show();
+			$(this).text('▼シート管理情報');
+		}
+	});
 
 	// 編集ボタン
 	$(document).on('click', '.edit-item-btn', function () {
