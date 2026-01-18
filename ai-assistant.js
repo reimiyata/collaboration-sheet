@@ -882,6 +882,308 @@ $(document).ready(function () {
 			clearAllFields();
 		}
 	});
+// ========================================
+// AI Bulk Input Feature
+// ========================================
+
+let bulkInputFiles = [];
+
+// Open AI Bulk Input Modal
+$('#ai-bulk-input-btn').on('click', function () {
+	// Load settings from AI assistant if available
+	if (aiSettings.endpoint) {
+		$('#bulk-ai-endpoint').val(aiSettings.endpoint);
+		$('#bulk-ai-api-key').val(aiSettings.apiKey);
+		$('#bulk-ai-model').val(aiSettings.model);
+		$('#bulk-ai-reasoning').val(aiSettings.reasoningEffort);
+		$('#bulk-ai-verbosity').val(aiSettings.verbosity);
+	}
+
+	// Clear previous files
+	bulkInputFiles = [];
+	$('#file-list').empty();
+
+	// Show modal
+	$('#aiBulkInputModal').modal('show');
+});
+
+// File selection button
+$('#select-files-btn').on('click', function () {
+	$('#bulk-file-input').click();
+});
+
+// File input change
+$('#bulk-file-input').on('change', function (e) {
+	handleFiles(e.target.files);
+});
+
+// Drag and drop
+$('#file-drop-zone').on('click', function () {
+	$('#bulk-file-input').click();
+});
+
+$('#file-drop-zone').on('dragover', function (e) {
+	e.preventDefault();
+	e.stopPropagation();
+	$(this).addClass('bg-light');
+});
+
+$('#file-drop-zone').on('dragleave', function (e) {
+	e.preventDefault();
+	e.stopPropagation();
+	$(this).removeClass('bg-light');
+});
+
+$('#file-drop-zone').on('drop', function (e) {
+	e.preventDefault();
+	e.stopPropagation();
+	$(this).removeClass('bg-light');
+
+	const files = e.originalEvent.dataTransfer.files;
+	handleFiles(files);
+});
+
+function handleFiles(files) {
+	for (let i = 0; i < files.length; i++) {
+		const file = files[i];
+		bulkInputFiles.push(file);
+
+		// Display file in list
+		const fileItem = $(`
+			<div class="file-item d-flex justify-content-between align-items-center p-2 border rounded mb-2" data-index="${bulkInputFiles.length - 1}">
+				<div>
+					<i class="fas fa-file mr-2"></i>
+					<span>${file.name}</span>
+					<small class="text-muted ml-2">(${(file.size / 1024).toFixed(1)} KB)</small>
+				</div>
+				<button type="button" class="btn btn-sm btn-outline-danger remove-file-btn">
+					<i class="fas fa-times"></i>
+				</button>
+			</div>
+		`);
+
+		$('#file-list').append(fileItem);
+	}
+}
+
+// Remove file
+$(document).on('click', '.remove-file-btn', function () {
+	const fileItem = $(this).closest('.file-item');
+	const index = parseInt(fileItem.attr('data-index'));
+
+	bulkInputFiles.splice(index, 1);
+	fileItem.remove();
+
+	// Update indices
+	$('.file-item').each(function (i) {
+		$(this).attr('data-index', i);
+	});
+});
+
+// Execute bulk input
+$('#execute-bulk-input-btn').on('click', async function () {
+	const endpoint = $('#bulk-ai-endpoint').val().trim();
+	const apiKey = $('#bulk-ai-api-key').val().trim();
+	const model = $('#bulk-ai-model').val();
+	const reasoning = $('#bulk-ai-reasoning').val();
+	const verbosity = $('#bulk-ai-verbosity').val();
+	const textInput = $('#bulk-text-input').val().trim();
+	const additionalInstructions = $('#bulk-additional-instructions').val().trim();
+
+	if (!endpoint || !apiKey) {
+		alert('Azure OpenAI エンドポイントとAPIキーを入力してください。');
+		return;
+	}
+
+	try {
+		$(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 処理中...');
+
+		// Read file contents
+		const fileContents = await readAllFiles();
+
+		// Get current sheet data
+		updateSpec();
+		const currentSheet = JSON.parse($('#data-sheetspec').text());
+
+		// Call AI API
+		const result = await callBulkInputAI(endpoint, apiKey, model, reasoning, verbosity, currentSheet, fileContents, textInput, additionalInstructions);
+
+		// Apply results to sheet
+		applyBulkInputResults(result);
+
+		// Close modal
+		$('#aiBulkInputModal').modal('hide');
+
+		alert('AI一括入力が完了しました。');
+	} catch (error) {
+		console.error('Bulk input error:', error);
+		alert('エラーが発生しました: ' + error.message);
+	} finally {
+		$(this).prop('disabled', false).html('実行');
+	}
+});
+
+async function readAllFiles() {
+	const contents = [];
+
+	for (const file of bulkInputFiles) {
+		try {
+			const content = await readFileContent(file);
+			contents.push({
+				name: file.name,
+				type: file.type,
+				content: content
+			});
+		} catch (error) {
+			console.error(`Error reading file ${file.name}:`, error);
+		}
+	}
+
+	return contents;
+}
+
+function readFileContent(file) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+
+		reader.onload = function (e) {
+			if (file.type.startsWith('image/')) {
+				// For images, use base64
+				resolve(e.target.result);
+			} else {
+				// For text files
+				resolve(e.target.result);
+			}
+		};
+
+		reader.onerror = function () {
+			reject(new Error(`Failed to read file: ${file.name}`));
+		};
+
+		if (file.type.startsWith('image/')) {
+			reader.readAsDataURL(file);
+		} else {
+			reader.readAsText(file);
+		}
+	});
+}
+
+async function callBulkInputAI(endpoint, apiKey, model, reasoning, verbosity, currentSheet, fileContents, textInput, additionalInstructions) {
+	// Build prompt
+	const systemPrompt = buildBulkInputPrompt(currentSheet, fileContents, textInput, additionalInstructions);
+
+	const messages = [
+		{
+			role: 'system',
+			content: systemPrompt
+		},
+		{
+			role: 'user',
+			content: 'シートの各フィールドに適切な内容を入力してください。'
+		}
+	];
+
+	const response = await fetch(`${endpoint}/chat/completions?api-version=2024-12-01-preview`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'api-key': apiKey
+		},
+		body: JSON.stringify({
+			model: model,
+			messages: messages,
+			reasoning_effort: reasoning,
+			verbosity: verbosity,
+			response_format: {
+				type: 'json_schema',
+				json_schema: {
+					name: 'bulk_input_result',
+					strict: true,
+					schema: {
+						type: 'object',
+						properties: {
+							fields: {
+								type: 'object',
+								additionalProperties: {
+									type: 'string'
+								}
+							}
+						},
+						required: ['fields'],
+						additionalProperties: false
+					}
+				}
+			}
+		})
+	});
+
+	if (!response.ok) {
+		throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+	}
+
+	const data = await response.json();
+	const content = data.choices[0].message.content;
+	const result = JSON.parse(content);
+
+	return result.fields;
+}
+
+function buildBulkInputPrompt(currentSheet, fileContents, textInput, additionalInstructions) {
+	let prompt = 'あなたは教育用の打ち合わせシート入力アシスタントです。\n\n';
+
+	prompt += '【シート構造】\n';
+	prompt += 'シートには以下のフィールドがあります：\n';
+	currentSheet['sheet-content'].forEach(item => {
+		if (item.type === 'terminal') {
+			const currentValue = item.form['form-main-answer'] || '';
+			prompt += `- ${item.id} (${item.name}): ${item.form.description || ''} [現在値: ${currentValue}]\n`;
+		}
+	});
+
+	prompt += '\n【提供された情報】\n';
+
+	if (fileContents.length > 0) {
+		prompt += 'ファイル内容:\n';
+		fileContents.forEach(file => {
+			prompt += `\n--- ${file.name} ---\n`;
+			if (file.type.startsWith('image/')) {
+				prompt += '[画像ファイル]\n';
+			} else {
+				prompt += file.content + '\n';
+			}
+		});
+	}
+
+	if (textInput) {
+		prompt += '\nテキスト入力:\n' + textInput + '\n';
+	}
+
+	if (additionalInstructions) {
+		prompt += '\n【追加指示】\n' + additionalInstructions + '\n';
+	}
+
+	prompt += '\n上記の情報を基に、シートの各フィールドに適切な内容を入力してください。\n';
+	prompt += 'フィールドIDをキーとし、入力内容を値とするJSONオブジェクトで返してください。\n';
+
+	return prompt;
+}
+
+function applyBulkInputResults(results) {
+	// Apply each field value
+	for (const [fieldId, value] of Object.entries(results)) {
+		const fieldElement = $(`#${fieldId}`).find('.form-control').first();
+		if (fieldElement.length > 0) {
+			fieldElement.val(value);
+			fieldElement.trigger('change');
+		}
+	}
+
+	// Update spec and save state for undo/redo
+	setTimeout(() => {
+		updateSpec();
+		saveState();
+	}, 1000);
+}
 
 
 	// Hide AI assistant in customization mode
@@ -933,3 +1235,4 @@ function restoreChatHistory(history) {
 // Make functions globally accessible
 window.getChatHistory = getChatHistory;
 window.restoreChatHistory = restoreChatHistory;
+

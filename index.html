@@ -137,6 +137,9 @@
 					<button id="clear-all-btn" class="btn btn-sm btn-outline-danger" title="全てクリア">
 						<i class="fas fa-eraser"></i> クリア
 					</button>
+					<button id="ai-bulk-input-btn" class="btn btn-sm btn-primary" title="AI一括入力">
+						<i class="fas fa-magic"></i> AI一括入力
+					</button>
 				</div>
 				<div class="menu-item">
 					<div id="print-sheet" class="btn btn-sm btn-outline-secondary">印刷</div>
@@ -289,6 +292,92 @@
 		</div>
 	</div>
 
+	<!-- AI Bulk Input Modal -->
+	<div class="modal fade" id="aiBulkInputModal" tabindex="-1" role="dialog">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">AI一括入力</h5>
+					<button type="button" class="close" data-dismiss="modal">
+						<span>&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<form id="ai-bulk-input-form">
+						<h6>AI設定</h6>
+						<div class="form-group">
+							<label>Azure OpenAI エンドポイント</label>
+							<input type="text" class="form-control" id="bulk-ai-endpoint"
+								placeholder="https://your-resource.openai.azure.com/">
+							<small class="form-text text-muted">デプロイメント名を含むエンドポイントURLを入力してください</small>
+						</div>
+						<div class="form-group">
+							<label>APIキー</label>
+							<input type="password" class="form-control" id="bulk-ai-api-key" placeholder="••••••••">
+						</div>
+						<div class="form-row">
+							<div class="form-group col-md-4">
+								<label>モデル</label>
+								<select class="form-control" id="bulk-ai-model">
+									<option value="gpt-5">GPT-5</option>
+									<option value="gpt-5.1">GPT-5.1</option>
+									<option value="gpt-5.2">GPT-5.2</option>
+								</select>
+							</div>
+							<div class="form-group col-md-4">
+								<label>推論量</label>
+								<select class="form-control" id="bulk-ai-reasoning">
+									<option value="minimal">Minimal</option>
+									<option value="low">Low</option>
+									<option value="medium" selected>Medium</option>
+									<option value="high">High</option>
+								</select>
+							</div>
+							<div class="form-group col-md-4">
+								<label>冗長さ</label>
+								<select class="form-control" id="bulk-ai-verbosity">
+									<option value="none">None</option>
+									<option value="low">Low</option>
+									<option value="medium" selected>Medium</option>
+									<option value="high">High</option>
+								</select>
+							</div>
+						</div>
+						<hr>
+						<h6>ファイルアップロード</h6>
+						<div class="form-group">
+							<div id="file-drop-zone" class="border rounded p-4 text-center"
+								style="border-style: dashed !important; cursor: pointer;">
+								<i class="fas fa-cloud-upload-alt fa-3x mb-2 text-muted"></i>
+								<p>ファイルをドラッグ&ドロップ または クリックして選択</p>
+								<input type="file" id="bulk-file-input" multiple
+									accept=".txt,.md,.pdf,.jpg,.jpeg,.png,.docx,.xlsx" style="display: none;">
+								<button type="button" class="btn btn-sm btn-outline-primary"
+									id="select-files-btn">ファイルを選択</button>
+							</div>
+							<div id="file-list" class="mt-2"></div>
+						</div>
+						<hr>
+						<h6>テキスト入力</h6>
+						<div class="form-group">
+							<textarea class="form-control" id="bulk-text-input" rows="4"
+								placeholder="授業に関する情報を自由に入力してください..."></textarea>
+						</div>
+						<hr>
+						<h6>AIへの追加指示</h6>
+						<div class="form-group">
+							<textarea class="form-control" id="bulk-additional-instructions" rows="2"
+								placeholder="例：入力した情報を基に、適宜内容を膨らませてください。"></textarea>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+					<button type="button" class="btn btn-primary" id="execute-bulk-input-btn">実行</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </body>
 
 <!-- Modal -->
@@ -437,1087 +526,1087 @@
 
 <script type="application/json" id="data-sheetspec">
 {
-	"sheet-meta": {
-		"受付番号": "",
-		"受付日": "",
-		"最終更新日": "",
-		"作成者": "",
-		"バージョン": "",
-		"進行状況": "",
-		"授業者": "",
-		"司書": "",
-		"シート名": "",
-		"メモ": ""
-	},
-	"sheet-content": [
-		{
-			"id": "A",
-			"parent": "root",
-			"level": 1,
-			"type": "nonterminal",
-			"name": "授業に関する情報",
-			"form": {
-			"prior": 1
-			}
-		},
-		{
-			"id": "A-01",
-			"parent": "A",
-			"level": 2,
-			"type": "terminal",
-			"name": "学年",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 1,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "小1／小2／小3／小4／小5／小6／中1／中2／中3／高1／高2／高3",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "学年を記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-02",
-			"parent": "A",
-			"level": 2,
-			"type": "terminal",
-			"name": "教科等",
-			"form": {
-				"dependence": "A-01",
-				"importance": 3,
-				"prior": 1,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "国語／算数／数学／理科／社会／外国語／家庭／音楽／保健体育／図工／美術／工芸／書道／技術／情報科／生活科／道徳／総合／特別活動",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "教科等を記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-03",
-			"parent": "A",
-			"level": 2,
-			"type": "nonterminal",
-			"name": "教科書",
-			"form": {
-					"prior": 1
-		}
-		},
-		{
-			"id": "A-03-a",
-			"parent": "A-03",
-			"level": 3,
-			"type": "terminal",
-			"name": "教科書名",
-			"form": {
-				"dependence": "A-02",
-				"importance": 2,
-				"prior": 1,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "東京書籍",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "使用している教科書を記入してください。",
-				"example": "「国語３」（学校図書）／「新しい科学３年」（東京書籍）",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-03-b",
-			"parent": "A-03",
-			"level": 3,
-			"type": "terminal",
-			"name": "単元（章）",
-			"form": {
-				"dependence": "A-03-a",
-				"importance": 2,
-				"prior": 1,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "input",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "授業に対応する教科書の単元（章）を記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-03-c",
-			"parent": "A-03",
-			"level": 3,
-			"type": "terminal",
-			"name": "ページ",
-			"form": {
-				"dependence": "A-03-a",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "input",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "教科書中で、特に使用する部分のページを記入してください。上の質問項目で単元が指定されている場合は、必ずしも記入する必要はありません。",
-				"example": "pp.11-20, 71, 73",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-04",
-			"parent": "A",
-			"level": 2,
-			"type": "terminal",
-			"name": "授業テーマ",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 1,
-				"form-main": "input",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "教科書の単元（章）とは別に、授業テーマや授業名が決まっていれば、記入してください。",
-				"example": "中世のものづくり／世界の食文化を調べよう",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-05",
-			"parent": "A",
-			"level": 2,
-			"type": "terminal",
-			"name": "授業のねらい",
-			"form": {
-				"dependence": "",
-				"importance": 2,
-				"prior": 1,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "この授業の学習目標や授業方針を記入してください。",
-				"example": "身の回りの品物から、日本の産業の特色と課題を考察させる。／江戸時代の生活文化などを調べる活動を通じて、江戸文学への興味関心を持たせる。／校内で観察できる植物を図鑑で調べることで、参考図書の使い方を習得させる。",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-06",
-			"parent": "A",
-			"level": 2,
-			"type": "terminal",
-			"name": "授業の背景",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "授業のきっかけ、年間の授業全体における本授業の位置づけ、時期的背景など補足的な情報を記入してください。",
-				"example": "ヘルスリテラシーを育てるためのカリキュラム研究の一環[活用DB: A0003]／理科の修学旅行（秩父・長瀞地方の地形と地質の学習）の事前学習[活用DB: A0086]",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-07",
-			"parent": "A",
-			"level": 2,
-			"type": "terminal",
-			"name": "授業の実施期間",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 1,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "2021年○月○旬〜2021年○月○旬／未定",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "図書を用いた活動を行う期間を記入してください。",
-				"example": "2021年5月中旬〜2021年6月中旬",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-08",
-			"parent": "A",
-			"level": 2,
-			"type": "nonterminal",
-			"name": "活動",
-			"form": {
-			"prior": 1
-		}
-		},
-		{
-			"id": "A-08-a",
-			"parent": "A-08",
-			"level": 3,
-			"type": "terminal",
-			"name": "時間",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "input",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "図書を用いた活動に使う時間（時限）と、単元全体の総時間数を記入して下さい。",
-				"example": "1, 2時間目/8時間",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-08-b",
-			"parent": "A-08",
-			"level": 3,
-			"type": "terminal",
-			"name": "場所",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "教室／学校図書館／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "input",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "活動の場所を選んでください（複数可）。「その他」を選択した場合、詳細欄に場所を記入してください。",
-				"example": "（その他の例）音楽室、家庭科室",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-08-c",
-			"parent": "A-08",
-			"level": 3,
-			"type": "terminal",
-			"name": "内容",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 1,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "調べ学習／読み聞かせ・ブックトーク／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "活動内容を選択してください（複数可）。「その他」を選択した場合、詳細欄に具体的に記入してください。",
-				"example": "（その他の例）一斉読書、情報利用教育",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-08-d",
-			"parent": "A-08",
-			"level": 3,
-			"type": "terminal",
-			"name": "形態",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "個人学習／グループ学習／一斉授業／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "活動形態を選択してください（複数可）。「その他」を選択した場合、詳細欄に具体的に記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-08-e",
-			"parent": "A-08",
-			"level": 3,
-			"type": "terminal",
-			"name": "成果物",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "ワークシート／レポート／口頭発表／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "活動の成果物を選択してください（複数可）。「その他」を選択した場合、詳細欄に具体的に記入してください。",
-				"example": "（その他の例）ポスター発表、演劇発表",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-08-f",
-			"parent": "A-08",
-			"level": 3,
-			"type": "terminal",
-			"name": "流れ",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "活動内容、形態、成果物等を踏まえつつ、図書を利用した活動の流れを、具体的に記入してください。",
-				"example": "(1) グループでキーワードを出し合い，それぞれ調査するテーマを決める。▶(2) テーマが決まったら各自で調べ作業に入る。最初は参考図書を使って，次に一般書・専門書等の図書にあたって調べを進める。▶(3) 調べたことをまとめて，グループ内でわかりやすく発表する。▶(4) グループの代表が全体の前で発表をする。[活用DB: A0125]",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-09",
-			"parent": "A",
-			"level": 2,
-			"type": "nonterminal",
-			"name": "授業者",
-			"form": {
-				"prior": 1
-		}
-		},
-		{
-			"id": "A-09-a",
-			"parent": "A",
-			"level": 3,
-			"type": "terminal",
-			"name": "同様の授業経験",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "radio",
-				"form-main-default": "",
-				"form-main-option": "経験あり／経験なし",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "過去に、今回の授業と同様のテーマで授業を行ったことがある場合は、「経験あり」にチェックをしてください。特記事項があれば、詳細欄に記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-09-b",
-			"parent": "A",
-			"level": 3,
-			"type": "terminal",
-			"name": "調べ学習経験",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "radio",
-				"form-main-default": "",
-				"form-main-option": "10単元以上／5〜9単元／1〜4単元／はじめて",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "（調べ学習を行う場合のみ回答してください）調べ学習の授業を行った経験について選んでください。特記事項があれば、詳細欄に記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-09-c",
-			"parent": "A",
-			"level": 3,
-			"type": "terminal",
-			"name": "読み聞かせ経験",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "radio",
-				"form-main-default": "",
-				"form-main-option": "10回以上／5〜9回／1〜4回／はじめて",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "（読み聞かせやブックトークを行う場合のみ回答してください）授業として読み聞かせやブックトークを行った経験について選んでください。特記事項があれば、詳細欄に記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-10",
-			"parent": "A",
-			"level": 2,
-			"type": "nonterminal",
-			"name": "学習者",
-			"form": {
-				"prior": 1
-		}
-		},
-		{
-			"id": "A-10-a",
-			"parent": "A",
-			"level": 3,
-			"type": "terminal",
-			"name": "クラス数",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 1,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "1／2／3／4／5／6／7／8／9／10",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "クラスの数を記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-10-b",
-			"parent": "A",
-			"level": 3,
-			"type": "terminal",
-			"name": "クラスの人数",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 1,
-				"form-main": "input",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "クラスの人数を記入してください。",
-				"example": "34人",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-10-c",
-			"parent": "A",
-			"level": 3,
-			"type": "terminal",
-			"name": "学習者の経験・様子",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "学習者の調べ学習の経験や様子を記入してください。また、授業に関連した事前学習に行っている場合や過去に関連した単元の授業を行っている場合は、その内容を記入してください。",
-				"example": "中2の終わりから、京都に関する本を読み、自分達の班のテーマを明確にしてきました。 [活用DB: A0135]／一年生は今、ひらがなを習っている最中です。[活用DB: A0122]",
-				"memo": ""
-			}
-		},
-		{
-			"id": "A-11",
-			"parent": "A",
-			"level": 2,
-			"type": "terminal",
-			"name": "その他",
-			"form": {
-				"dependence": "",
-				"importance": 0,
-				"prior": 0,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "上記以外に、授業に関して共有すべき事項があれば自由に記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B",
-			"parent": "root",
-			"level": 1,
-			"type": "nonterminal",
-			"name": "資料に関する情報",
-			"form": {
-				"prior": 1
-			}
-		},
-		{
-			"id": "B-01",
-			"parent": "B",
-			"level": 2,
-			"type": "terminal",
-			"name": "キーワード",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 1,
-				"form-main": "input",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "用意して欲しい図書に関するキーワードを挙げてください。思いつくものをなるべく多めに挙げてください（３つ以上を目安）。",
-				"example": "火山、噴火、地震、断層／アイヌ、北海道、多文化共生",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-02",
-			"parent": "B",
-			"level": 2,
-			"type": "terminal",
-			"name": "指定図書",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 1,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "用意してほしい図書が決まっていれば、それらの書名や著者、冊数等を記入してください。",
-				"example": "『クラウディアの祈り』[活用DB: A0102]／夏目漱石と芥川龍之介の著作を10冊程度[活用DB: A0142]／『保存食のはなし』[活用DB: A0016]",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-03",
-			"parent": "B",
-			"level": 2,
-			"type": "terminal",
-			"name": "冊数",
-			"form": {
-				"dependence": "",
-				"importance": 2,
-				"prior": 0,
-				"form-main": "input",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "用意して欲しい図書の冊数（種類数）を記入してください。",
-				"example": "約20冊",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-04",
-			"parent": "B",
-			"level": 2,
-			"type": "terminal",
-			"name": "複本",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "希望なし／希望あり／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "複本に関する希望の有無を選択してください。「希望あり」を選択した場合、どのような図書について何冊程度の複本が必要か記入してください。",
-				"example": "全く同じ国語辞書を40冊[活用DB: A0199]",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-05",
-			"parent": "B",
-			"level": 2,
-			"type": "nonterminal",
-			"name": "図書の属性",
-			"form": {
-				"prior": 1
-			}
-		},
-		{
-			"id": "B-05-a",
-			"parent": "B-05",
-			"level": 3,
-			"type": "terminal",
-			"name": "資料形態",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "指定なし／単行本／文庫／新書／全集・叢書／辞典・事典／図鑑／絵本／コミック／DAISY／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "input",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "図書の資料形態を選択してください（複数可）。「その他」を選択した場合、詳細欄に記入してください。避けて欲しい資料形態についても、詳細欄に記入してください。",
-				"example": "（その他の例）写真集",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-05-b",
-			"parent": "B-05",
-			"level": 3,
-			"type": "terminal",
-			"name": "内容",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 1,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "哲学／歴史・地理／社会科学／自然科学／技術／産業／芸術／言語／文学／文学（古典）／伝記／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "input",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "図書の内容カテゴリーを選択してください（複数可）。より詳細な内容が決まっている場合、詳細欄に記入してください。",
-				"example": "江戸時代が舞台の小説[活用DB: A0001]／有名な数学者の伝記[活用DB: A0032]／科学読み物",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-05-c",
-			"parent": "B-05",
-			"level": 3,
-			"type": "terminal",
-			"name": "内容の新しさ",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "出版から〜年以内／希望なし／未定",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "内容の新しさ（出版経過年数）に関する希望を記入してください。",
-				"example": "",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-05-d",
-			"parent": "B-05",
-			"level": 3,
-			"type": "terminal",
-			"name": "内容の難易度",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "小学校低学年／中学年／高学年／中学／高校／一般／指定なし／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "図書の難易度に関する希望があれば記入してください（複数可）。より詳細な要望があれば、詳細欄に記入してください。",
-				"example": "小学2年生が楽しめるもの[活用DB: A0149]",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-05-e",
-			"parent": "B-05",
-			"level": 3,
-			"type": "terminal",
-			"name": "その他の属性",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "その他希望する図書の属性（ジャンル、分量、サイズ、大きさ、目次や索引の有無など）を記入してください。",
-				"example": "短めの評論文が載っているもの／写真の多い、大きめの本／目次と索引のある本[活用DB: A0179]／文字があまり多くなく漢字にルビのあるもの[活用DB: A0170]",
-				"memo": "科学読み物"
-			}
-		},
-		{
-			"id": "B-06",
-			"parent": "B",
-			"level": 2,
-			"type": "terminal",
-			"name": "属性のバランス",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "資料全体における、上記(05)図書の属性（a〜e）のバランスについて、希望があれば記入してください。",
-				"example": "学年相応のものだけでなく、少しレベルを下げたものも入れて欲しい。／古くても良いものなら数冊程度は混ぜて良い。",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-07",
-			"parent": "B",
-			"level": 2,
-			"type": "terminal",
-			"name": "図書以外",
-			"form": {
-				"dependence": "",
-				"importance": 0,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "新聞／雑誌／Webページ／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "図書以外に用意して欲しい資料を選択してください。「その他」を選択した場合、詳細欄に具体的に記入してください。避けて欲しい資料形態についても、詳細欄に記入してください。",
-				"example": "（その他の例）電化製品のカタログ[活用DB: A0042]／調べ学習の前年度の作品[活用DB: A0062]／今回はインターネットは使いません",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-08",
-			"parent": "B",
-			"level": 2,
-			"type": "terminal",
-			"name": "教材研究用の図書",
-			"form": {
-				"dependence": "",
-				"importance": 1,
-				"prior": 0,
-				"form-main": "select",
-				"form-main-default": "",
-				"form-main-option": "〜の資料が欲しい／特に必要なし／未定",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": " 教員の教材研究用の図書も必要な場合は、ご希望について記入してください。",
-				"example": "民謡についての研究書[活用DB: A0152]",
-				"memo": ""
-			}
-		},
-		{
-			"id": "B-09",
-			"parent": "B",
-			"level": 2,
-			"type": "terminal",
-			"name": "その他",
-			"form": {
-				"dependence": "",
-				"importance": 0,
-				"prior": 0,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "上記以外に、教材に関して要望があれば自由に記入してください。",
-				"example": "理系の生徒が拒絶しない内容のもの[活用DB: A0109]／原爆の被害について複数の立場や価値観から知ることができるもの[活用DB: A0091]",
-				"memo": ""
-			}
-		},
-		{
-			"id": "C",
-			"parent": "root",
-			"level": 1,
-			"type": "nonterminal",
-			"name": "提供に関する情報",
-			"form": {}
-		},
-		{
-			"id": "C-01",
-			"parent": "C",
-			"level": 2,
-			"type": "terminal",
-			"name": "提供方法",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "教室貸出／図書館展示／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "選書した図書の提供方法に関する希望を選択してください（複数可）。期間、場所、配置方法など具体的に決まっていれば、詳細欄に記入してください。",
-				"example": "各テーマに関連する本を、分類番号順に並べて別置してほしい。／ブックトラックごと学級貸出してほしい。",
-				"memo": ""
-			}
-		},
-		{
-			"id": "C-02",
-			"parent": "C",
-			"level": 2,
-			"type": "terminal",
-			"name": "事前の準備",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "図書リスト作成／ワークシート等の作成／情報機器の用意／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "授業開始前の準備に関する希望を記入してください（複数可）。具体的に決まっていれば、詳細欄に記入してください。",
-				"example": "読みやすい新書を分野ごとにまとめてブックリストにしてほしい。／ワークシートの作成に協力してほしい。／班ごとの検索用タブレットPCを準備してほしい。",
-				"memo": ""
-			}
-		},
-		{
-			"id": "C-03",
-			"parent": "C",
-			"level": 2,
-			"type": "terminal",
-			"name": "当日の関与",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "checkbox",
-				"form-main-default": "",
-				"form-main-option": "チームティーチング／読み聞かせ・ブックトーク／図書館利用教育／その他／未定",
-				"form-main-answer": "",
-				"form-sub": "textarea",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "図書館職員による授業当日のサポートに関する希望を選択してください（複数可）。具体的に決まっていれば、詳細欄に記入してください。",
-				"example": "（チームティーチングの例）授業中、生徒の相談に乗り、文献の検索を手伝ってほしい。／（図書館利用教育の例）分類番号の見方を児童に教えてほしい、図鑑や事典の使い方を指導してほしい。",
-				"memo": ""
-			}
-		},
-		{
-			"id": "C-04",
-			"parent": "C",
-			"level": 2,
-			"type": "terminal",
-			"name": "その他",
-			"form": {
-				"dependence": "",
-				"importance": 3,
-				"prior": 0,
-				"form-main": "textarea",
-				"form-main-default": "",
-				"form-main-option": "",
-				"form-main-answer": "",
-				"form-sub": "",
-				"form-sub-default": "",
-				"form-sub-answer": "",
-				"description": "上記以外に、資料の提供に関して要望があれば自由に記入してください。",
-				"example": "保管していた過去の生徒の作品を一時的に図書館に展示してほしい。／子ども向けの読み聞かせ活動を行っている実演者のコーディネートをお願いしたい。／模造紙を使った発表ポスター作成を図書館の大きい机で行いたい。",
-				"memo": ""
-			}
-		}
-	]
+  "sheet-meta": {
+    "受付番号": "",
+    "受付日": "",
+    "最終更新日": "",
+    "作成者": "",
+    "バージョン": "",
+    "進行状況": "",
+    "授業者": "",
+    "司書": "",
+    "シート名": "",
+    "メモ": ""
+  },
+  "sheet-content": [
+    {
+      "id": "A",
+      "parent": "root",
+      "level": 1,
+      "type": "nonterminal",
+      "name": "授業に関する情報",
+      "form": {
+      "prior": 1
+      }
+    },
+    {
+      "id": "A-01",
+      "parent": "A",
+      "level": 2,
+      "type": "terminal",
+      "name": "学年",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 1,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "小1／小2／小3／小4／小5／小6／中1／中2／中3／高1／高2／高3",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "学年を記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-02",
+      "parent": "A",
+      "level": 2,
+      "type": "terminal",
+      "name": "教科等",
+      "form": {
+        "dependence": "A-01",
+        "importance": 3,
+        "prior": 1,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "国語／算数／数学／理科／社会／外国語／家庭／音楽／保健体育／図工／美術／工芸／書道／技術／情報科／生活科／道徳／総合／特別活動",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "教科等を記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-03",
+      "parent": "A",
+      "level": 2,
+      "type": "nonterminal",
+      "name": "教科書",
+      "form": {
+          "prior": 1
+    }
+    },
+    {
+      "id": "A-03-a",
+      "parent": "A-03",
+      "level": 3,
+      "type": "terminal",
+      "name": "教科書名",
+      "form": {
+        "dependence": "A-02",
+        "importance": 2,
+        "prior": 1,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "東京書籍",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "使用している教科書を記入してください。",
+        "example": "「国語３」（学校図書）／「新しい科学３年」（東京書籍）",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-03-b",
+      "parent": "A-03",
+      "level": 3,
+      "type": "terminal",
+      "name": "単元（章）",
+      "form": {
+        "dependence": "A-03-a",
+        "importance": 2,
+        "prior": 1,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "input",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "授業に対応する教科書の単元（章）を記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-03-c",
+      "parent": "A-03",
+      "level": 3,
+      "type": "terminal",
+      "name": "ページ",
+      "form": {
+        "dependence": "A-03-a",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "input",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "教科書中で、特に使用する部分のページを記入してください。上の質問項目で単元が指定されている場合は、必ずしも記入する必要はありません。",
+        "example": "pp.11-20, 71, 73",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-04",
+      "parent": "A",
+      "level": 2,
+      "type": "terminal",
+      "name": "授業テーマ",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 1,
+        "form-main": "input",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "教科書の単元（章）とは別に、授業テーマや授業名が決まっていれば、記入してください。",
+        "example": "中世のものづくり／世界の食文化を調べよう",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-05",
+      "parent": "A",
+      "level": 2,
+      "type": "terminal",
+      "name": "授業のねらい",
+      "form": {
+        "dependence": "",
+        "importance": 2,
+        "prior": 1,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "この授業の学習目標や授業方針を記入してください。",
+        "example": "身の回りの品物から、日本の産業の特色と課題を考察させる。／江戸時代の生活文化などを調べる活動を通じて、江戸文学への興味関心を持たせる。／校内で観察できる植物を図鑑で調べることで、参考図書の使い方を習得させる。",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-06",
+      "parent": "A",
+      "level": 2,
+      "type": "terminal",
+      "name": "授業の背景",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "授業のきっかけ、年間の授業全体における本授業の位置づけ、時期的背景など補足的な情報を記入してください。",
+        "example": "ヘルスリテラシーを育てるためのカリキュラム研究の一環[活用DB: A0003]／理科の修学旅行（秩父・長瀞地方の地形と地質の学習）の事前学習[活用DB: A0086]",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-07",
+      "parent": "A",
+      "level": 2,
+      "type": "terminal",
+      "name": "授業の実施期間",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 1,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "2021年○月○旬〜2021年○月○旬／未定",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "図書を用いた活動を行う期間を記入してください。",
+        "example": "2021年5月中旬〜2021年6月中旬",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-08",
+      "parent": "A",
+      "level": 2,
+      "type": "nonterminal",
+      "name": "活動",
+      "form": {
+      "prior": 1
+    }
+    },
+    {
+      "id": "A-08-a",
+      "parent": "A-08",
+      "level": 3,
+      "type": "terminal",
+      "name": "時間",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "input",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "図書を用いた活動に使う時間（時限）と、単元全体の総時間数を記入して下さい。",
+        "example": "1, 2時間目/8時間",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-08-b",
+      "parent": "A-08",
+      "level": 3,
+      "type": "terminal",
+      "name": "場所",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "教室／学校図書館／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "input",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "活動の場所を選んでください（複数可）。「その他」を選択した場合、詳細欄に場所を記入してください。",
+        "example": "（その他の例）音楽室、家庭科室",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-08-c",
+      "parent": "A-08",
+      "level": 3,
+      "type": "terminal",
+      "name": "内容",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 1,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "調べ学習／読み聞かせ・ブックトーク／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "活動内容を選択してください（複数可）。「その他」を選択した場合、詳細欄に具体的に記入してください。",
+        "example": "（その他の例）一斉読書、情報利用教育",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-08-d",
+      "parent": "A-08",
+      "level": 3,
+      "type": "terminal",
+      "name": "形態",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "個人学習／グループ学習／一斉授業／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "活動形態を選択してください（複数可）。「その他」を選択した場合、詳細欄に具体的に記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-08-e",
+      "parent": "A-08",
+      "level": 3,
+      "type": "terminal",
+      "name": "成果物",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "ワークシート／レポート／口頭発表／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "活動の成果物を選択してください（複数可）。「その他」を選択した場合、詳細欄に具体的に記入してください。",
+        "example": "（その他の例）ポスター発表、演劇発表",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-08-f",
+      "parent": "A-08",
+      "level": 3,
+      "type": "terminal",
+      "name": "流れ",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "活動内容、形態、成果物等を踏まえつつ、図書を利用した活動の流れを、具体的に記入してください。",
+        "example": "(1) グループでキーワードを出し合い，それぞれ調査するテーマを決める。▶(2) テーマが決まったら各自で調べ作業に入る。最初は参考図書を使って，次に一般書・専門書等の図書にあたって調べを進める。▶(3) 調べたことをまとめて，グループ内でわかりやすく発表する。▶(4) グループの代表が全体の前で発表をする。[活用DB: A0125]",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-09",
+      "parent": "A",
+      "level": 2,
+      "type": "nonterminal",
+      "name": "授業者",
+      "form": {
+        "prior": 1
+    }
+    },
+    {
+      "id": "A-09-a",
+      "parent": "A",
+      "level": 3,
+      "type": "terminal",
+      "name": "同様の授業経験",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "radio",
+        "form-main-default": "",
+        "form-main-option": "経験あり／経験なし",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "過去に、今回の授業と同様のテーマで授業を行ったことがある場合は、「経験あり」にチェックをしてください。特記事項があれば、詳細欄に記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-09-b",
+      "parent": "A",
+      "level": 3,
+      "type": "terminal",
+      "name": "調べ学習経験",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "radio",
+        "form-main-default": "",
+        "form-main-option": "10単元以上／5〜9単元／1〜4単元／はじめて",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "（調べ学習を行う場合のみ回答してください）調べ学習の授業を行った経験について選んでください。特記事項があれば、詳細欄に記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-09-c",
+      "parent": "A",
+      "level": 3,
+      "type": "terminal",
+      "name": "読み聞かせ経験",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "radio",
+        "form-main-default": "",
+        "form-main-option": "10回以上／5〜9回／1〜4回／はじめて",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "（読み聞かせやブックトークを行う場合のみ回答してください）授業として読み聞かせやブックトークを行った経験について選んでください。特記事項があれば、詳細欄に記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-10",
+      "parent": "A",
+      "level": 2,
+      "type": "nonterminal",
+      "name": "学習者",
+      "form": {
+        "prior": 1
+    }
+    },
+    {
+      "id": "A-10-a",
+      "parent": "A",
+      "level": 3,
+      "type": "terminal",
+      "name": "クラス数",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 1,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "1／2／3／4／5／6／7／8／9／10",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "クラスの数を記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-10-b",
+      "parent": "A",
+      "level": 3,
+      "type": "terminal",
+      "name": "クラスの人数",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 1,
+        "form-main": "input",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "クラスの人数を記入してください。",
+        "example": "34人",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-10-c",
+      "parent": "A",
+      "level": 3,
+      "type": "terminal",
+      "name": "学習者の経験・様子",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "学習者の調べ学習の経験や様子を記入してください。また、授業に関連した事前学習に行っている場合や過去に関連した単元の授業を行っている場合は、その内容を記入してください。",
+        "example": "中2の終わりから、京都に関する本を読み、自分達の班のテーマを明確にしてきました。 [活用DB: A0135]／一年生は今、ひらがなを習っている最中です。[活用DB: A0122]",
+        "memo": ""
+      }
+    },
+    {
+      "id": "A-11",
+      "parent": "A",
+      "level": 2,
+      "type": "terminal",
+      "name": "その他",
+      "form": {
+        "dependence": "",
+        "importance": 0,
+        "prior": 0,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "上記以外に、授業に関して共有すべき事項があれば自由に記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B",
+      "parent": "root",
+      "level": 1,
+      "type": "nonterminal",
+      "name": "資料に関する情報",
+      "form": {
+        "prior": 1
+      }
+    },
+    {
+      "id": "B-01",
+      "parent": "B",
+      "level": 2,
+      "type": "terminal",
+      "name": "キーワード",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 1,
+        "form-main": "input",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "用意して欲しい図書に関するキーワードを挙げてください。思いつくものをなるべく多めに挙げてください（３つ以上を目安）。",
+        "example": "火山、噴火、地震、断層／アイヌ、北海道、多文化共生",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-02",
+      "parent": "B",
+      "level": 2,
+      "type": "terminal",
+      "name": "指定図書",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 1,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "用意してほしい図書が決まっていれば、それらの書名や著者、冊数等を記入してください。",
+        "example": "『クラウディアの祈り』[活用DB: A0102]／夏目漱石と芥川龍之介の著作を10冊程度[活用DB: A0142]／『保存食のはなし』[活用DB: A0016]",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-03",
+      "parent": "B",
+      "level": 2,
+      "type": "terminal",
+      "name": "冊数",
+      "form": {
+        "dependence": "",
+        "importance": 2,
+        "prior": 0,
+        "form-main": "input",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "用意して欲しい図書の冊数（種類数）を記入してください。",
+        "example": "約20冊",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-04",
+      "parent": "B",
+      "level": 2,
+      "type": "terminal",
+      "name": "複本",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "希望なし／希望あり／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "複本に関する希望の有無を選択してください。「希望あり」を選択した場合、どのような図書について何冊程度の複本が必要か記入してください。",
+        "example": "全く同じ国語辞書を40冊[活用DB: A0199]",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-05",
+      "parent": "B",
+      "level": 2,
+      "type": "nonterminal",
+      "name": "図書の属性",
+      "form": {
+        "prior": 1
+      }
+    },
+    {
+      "id": "B-05-a",
+      "parent": "B-05",
+      "level": 3,
+      "type": "terminal",
+      "name": "資料形態",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "指定なし／単行本／文庫／新書／全集・叢書／辞典・事典／図鑑／絵本／コミック／DAISY／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "input",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "図書の資料形態を選択してください（複数可）。「その他」を選択した場合、詳細欄に記入してください。避けて欲しい資料形態についても、詳細欄に記入してください。",
+        "example": "（その他の例）写真集",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-05-b",
+      "parent": "B-05",
+      "level": 3,
+      "type": "terminal",
+      "name": "内容",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 1,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "哲学／歴史・地理／社会科学／自然科学／技術／産業／芸術／言語／文学／文学（古典）／伝記／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "input",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "図書の内容カテゴリーを選択してください（複数可）。より詳細な内容が決まっている場合、詳細欄に記入してください。",
+        "example": "江戸時代が舞台の小説[活用DB: A0001]／有名な数学者の伝記[活用DB: A0032]／科学読み物",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-05-c",
+      "parent": "B-05",
+      "level": 3,
+      "type": "terminal",
+      "name": "内容の新しさ",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "出版から〜年以内／希望なし／未定",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "内容の新しさ（出版経過年数）に関する希望を記入してください。",
+        "example": "",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-05-d",
+      "parent": "B-05",
+      "level": 3,
+      "type": "terminal",
+      "name": "内容の難易度",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "小学校低学年／中学年／高学年／中学／高校／一般／指定なし／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "図書の難易度に関する希望があれば記入してください（複数可）。より詳細な要望があれば、詳細欄に記入してください。",
+        "example": "小学2年生が楽しめるもの[活用DB: A0149]",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-05-e",
+      "parent": "B-05",
+      "level": 3,
+      "type": "terminal",
+      "name": "その他の属性",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "その他希望する図書の属性（ジャンル、分量、サイズ、大きさ、目次や索引の有無など）を記入してください。",
+        "example": "短めの評論文が載っているもの／写真の多い、大きめの本／目次と索引のある本[活用DB: A0179]／文字があまり多くなく漢字にルビのあるもの[活用DB: A0170]",
+        "memo": "科学読み物"
+      }
+    },
+    {
+      "id": "B-06",
+      "parent": "B",
+      "level": 2,
+      "type": "terminal",
+      "name": "属性のバランス",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "資料全体における、上記(05)図書の属性（a〜e）のバランスについて、希望があれば記入してください。",
+        "example": "学年相応のものだけでなく、少しレベルを下げたものも入れて欲しい。／古くても良いものなら数冊程度は混ぜて良い。",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-07",
+      "parent": "B",
+      "level": 2,
+      "type": "terminal",
+      "name": "図書以外",
+      "form": {
+        "dependence": "",
+        "importance": 0,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "新聞／雑誌／Webページ／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "図書以外に用意して欲しい資料を選択してください。「その他」を選択した場合、詳細欄に具体的に記入してください。避けて欲しい資料形態についても、詳細欄に記入してください。",
+        "example": "（その他の例）電化製品のカタログ[活用DB: A0042]／調べ学習の前年度の作品[活用DB: A0062]／今回はインターネットは使いません",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-08",
+      "parent": "B",
+      "level": 2,
+      "type": "terminal",
+      "name": "教材研究用の図書",
+      "form": {
+        "dependence": "",
+        "importance": 1,
+        "prior": 0,
+        "form-main": "select",
+        "form-main-default": "",
+        "form-main-option": "〜の資料が欲しい／特に必要なし／未定",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": " 教員の教材研究用の図書も必要な場合は、ご希望について記入してください。",
+        "example": "民謡についての研究書[活用DB: A0152]",
+        "memo": ""
+      }
+    },
+    {
+      "id": "B-09",
+      "parent": "B",
+      "level": 2,
+      "type": "terminal",
+      "name": "その他",
+      "form": {
+        "dependence": "",
+        "importance": 0,
+        "prior": 0,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "上記以外に、教材に関して要望があれば自由に記入してください。",
+        "example": "理系の生徒が拒絶しない内容のもの[活用DB: A0109]／原爆の被害について複数の立場や価値観から知ることができるもの[活用DB: A0091]",
+        "memo": ""
+      }
+    },
+    {
+      "id": "C",
+      "parent": "root",
+      "level": 1,
+      "type": "nonterminal",
+      "name": "提供に関する情報",
+      "form": {}
+    },
+    {
+      "id": "C-01",
+      "parent": "C",
+      "level": 2,
+      "type": "terminal",
+      "name": "提供方法",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "教室貸出／図書館展示／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "選書した図書の提供方法に関する希望を選択してください（複数可）。期間、場所、配置方法など具体的に決まっていれば、詳細欄に記入してください。",
+        "example": "各テーマに関連する本を、分類番号順に並べて別置してほしい。／ブックトラックごと学級貸出してほしい。",
+        "memo": ""
+      }
+    },
+    {
+      "id": "C-02",
+      "parent": "C",
+      "level": 2,
+      "type": "terminal",
+      "name": "事前の準備",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "図書リスト作成／ワークシート等の作成／情報機器の用意／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "授業開始前の準備に関する希望を記入してください（複数可）。具体的に決まっていれば、詳細欄に記入してください。",
+        "example": "読みやすい新書を分野ごとにまとめてブックリストにしてほしい。／ワークシートの作成に協力してほしい。／班ごとの検索用タブレットPCを準備してほしい。",
+        "memo": ""
+      }
+    },
+    {
+      "id": "C-03",
+      "parent": "C",
+      "level": 2,
+      "type": "terminal",
+      "name": "当日の関与",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "checkbox",
+        "form-main-default": "",
+        "form-main-option": "チームティーチング／読み聞かせ・ブックトーク／図書館利用教育／その他／未定",
+        "form-main-answer": "",
+        "form-sub": "textarea",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "図書館職員による授業当日のサポートに関する希望を選択してください（複数可）。具体的に決まっていれば、詳細欄に記入してください。",
+        "example": "（チームティーチングの例）授業中、生徒の相談に乗り、文献の検索を手伝ってほしい。／（図書館利用教育の例）分類番号の見方を児童に教えてほしい、図鑑や事典の使い方を指導してほしい。",
+        "memo": ""
+      }
+    },
+    {
+      "id": "C-04",
+      "parent": "C",
+      "level": 2,
+      "type": "terminal",
+      "name": "その他",
+      "form": {
+        "dependence": "",
+        "importance": 3,
+        "prior": 0,
+        "form-main": "textarea",
+        "form-main-default": "",
+        "form-main-option": "",
+        "form-main-answer": "",
+        "form-sub": "",
+        "form-sub-default": "",
+        "form-sub-answer": "",
+        "description": "上記以外に、資料の提供に関して要望があれば自由に記入してください。",
+        "example": "保管していた過去の生徒の作品を一時的に図書館に展示してほしい。／子ども向けの読み聞かせ活動を行っている実演者のコーディネートをお願いしたい。／模造紙を使った発表ポスター作成を図書館の大きい机で行いたい。",
+        "memo": ""
+      }
+    }
+  ]
 }
 
 </script>
 
 <script type="application/json" id="data-dependence">
 {
-	"A-01": [
-		["A-02", ["A-01"]],
-		["A-03-a", ["A-01","A-02"]]
-	],
-	"A-02": [
-		["A-03-a", ["A-01","A-02"]]
-	],
-	"A-03-a": [
-		["A-03-b", ["A-03-a"]]
-	]
+  "A-01": [
+    ["A-02", ["A-01"]],
+    ["A-03-a", ["A-01","A-02"]]
+  ],
+  "A-02": [
+    ["A-03-a", ["A-01","A-02"]]
+  ],
+  "A-03-a": [
+    ["A-03-b", ["A-03-a"]]
+  ]
 }
 </script>
 
 <script type="application/json" id="data-option">
 {
-	"A-02": {
-			"小1": "国語／算数／生活／音楽／図画工作／体育／道徳／特別活動／その他",
-			"小2": "国語／算数／生活／音楽／図画工作／体育／道徳／特別活動／その他",
-			"小3": "国語／社会／算数／理科／音楽／図画工作／体育／道徳／外国語活動／総合的な学習の時間／特別活動／その他",
-			"小4": "国語／社会／算数／理科／音楽／図画工作／体育／道徳／外国語活動／総合的な学習の時間／特別活動／その他",
-			"小5": "国語／社会／算数／理科／音楽／図画工作／家庭／体育／外国語／道徳／総合的な学習の時間／特別活動／その他",
-			"小6": "国語／社会／算数／理科／音楽／図画工作／家庭／体育／外国語／道徳／総合的な学習の時間／特別活動／その他",
-			"中1": "国語／社会／数学／理科／音楽／美術／保健体育／技術・家庭／外国語／道徳／総合的な学習の時間／特別活動／その他",
-			"中2": "国語／社会／数学／理科／音楽／美術／保健体育／技術・家庭／外国語／道徳／総合的な学習の時間／特別活動／その他",
-			"中3": "国語／社会／数学／理科／音楽／美術／保健体育／技術・家庭／外国語／道徳／総合的な学習の時間／特別活動／その他",
-			"高1": "国語／地理歴史／公民／数学／理科／保健体育／芸術／外国語／家庭／情報／理数／総合的な探究の時間／特別活動／その他",
-			"高2": "国語／地理歴史／公民／数学／理科／保健体育／芸術／外国語／家庭／情報／理数／総合的な探究の時間／特別活動／その他",
-			"高3": "国語／地理歴史／公民／数学／理科／保健体育／芸術／外国語／家庭／情報／理数／総合的な探究の時間／特別活動／その他"
-	},
-	"A-03-a": {
-		"小1音楽": "小学音楽 おんがくのおくりもの １（教育出版）／小学生のおんがく１（教育芸術社）",
-		"小1国語": "あたらしいこくご 上（東京書籍）／あたらしいこくご 下（東京書籍）／みんなとまなぶ しょうがっこう こくご 一ねん 上（学校図書）／みんなとまなぶ しょうがっこう こくご 一ねん 下（学校図書）／ひろがることば しょうがくこくご 一上（教育出版）／ひろがることば しょうがくこくご 一下（教育出版）／こくご一上 かざぐるま（光村出版）／こくご一下 ともだち（光村出版）／あたらしい しょしゃ 一（東京書籍）／みんなとまなぶ しょうがっこうしょしゃ 一ねん（学校図書）／しょうがく しょしゃ 一ねん（教育出版）／しょしゃ 一ねん（光村図書）／しょうがくしょしゃ 一ねん（日本文教出版）",
-		"小1算数": "あたらしい さんすう １① さんすうの とびら（東京書籍）／あたらしい さんすう １② さんすう だいすき！（東京書籍）／たのしいさんすう１ねん（大日本図書）／みんなとまなぶ しょうがっこう さんすう １ねん上（学校図書）／みんなとまなぶ しょうがっこう さんすう １ねん下（学校図書）／しょうがくさんすう１（教育出版）／わくわく さんすう１（啓林館）／しょうがく さんすう １ねん上（日本文教出版）／しょうがく さんすう １ねん下（日本文教出版）",
-		"小1図画工作": "ずがこうさく１・２上 わくわくするね（開隆堂）／ずがこうさく１・２下 みつけたよ（開隆堂）／ずがこうさく１・２上 たのしいな おもしろいな（日本文教出版）／ずがこうさく１・２下 たのしいな おもしろいな（日本文教出版）",
-		"小1生活": "どきどきわくわく あたらしい せいかつ 上（東京書籍）／あしたへジャンプ 新しい生活 下（東京書籍）／たのしい せいかつ 上 なかよし（大日本図書）／たのしい せいかつ 下 はっけん（大日本図書）／みんなとまなぶ しょうがっこう せいかつ 上（学校図書）／みんなとまなぶ しょうがっこう せいかつ 下（学校図書）／せいかつ上 みんな なかよし（教育出版）／せいかつ下 なかよしひろがれ（教育出版）／せいかつ 上 あおぞら（信州教育出版）／せいかつ 下 そよかぜ（信州教育出版）／せいかつ 上 まいにち あたらしい（光村図書）／せいかつ 下 だいすき みつけた（光村図書）／わくわく せいかつ上（啓林館）／わくわく せいかつ下（啓林館）／わたしと せいかつ 上 みんな なかよし（日文）／わたしと せいかつ 下 ふれあい だいすき（日文）",
-		"小1道徳": "新訂 あたらしいどうとく １（東京書籍）／かがやけ みらい しょうがっこうどうとく１ねん きづき（学校図書）／かがやけ みらい しょうがっこうどうとく１ねん まなび（学校図書）／しょうがくどうとく１ はばたこうあすへ（教育出版）／どうとく １ きみが いちばん ひかるとき（光村出版）／しょうがくどうとく いきるちから １（日本文教出版）／しょうがくどうとく いきるちから １ どうとくノート（日本文教出版）／しょうがくどうとく ゆたかな こころ １年（光文書院）／新・みんなのどうとく１（学研教育みらい）／みんなでかんがえ、はなしあう しょうがくせいのどうとく（廣あかつき）／じぶんをみつめ、かんがえる どうとくノート１（廣あかつき）",
-		"小2音楽": "小学音楽 おんがくのおくりもの ２（教育出版）／小学生の音楽２（教育芸術社）",
-		"小2国語": "新しい国語 二上（東京書籍）／新しい国語 二下（東京書籍）／みんなと学ぶ 小学校 こくご 二年 上（学校図書）／みんなと学ぶ 小学校 こくご 二年 下（学校図書）／ひろがることば 小学国語 二上（教育出版）／ひろがることば 小学国語 二下（教育出版）／こくご二上 たんぽぽ（光村出版）／こくご二下 赤とんぼ（光村出版）／新しい しょしゃ 二（東京書籍）／みんなと学ぶ 小学校しょしゃ 二年（学校図書）／小学 しょしゃ 二年（教育出版）／しょしゃ 二年（光村図書）／小学しょしゃ 二年（日本文教出版）",
-		"小2算数": "新しい算数 ２上 考えるって おもしろい！（東京書籍）／新しい算数 ２下 考えるって おもしろい！（東京書籍）／たのしい算数２年（大日本図書）／みんなと学ぶ 小学校 算数 ２年上（学校図書）／みんなと学ぶ 小学校 算数 ２年下（学校図書）／小学算数２上（教育出版）／小学算数２下（教育出版）／わくわく 算数２上（啓林館）／わくわく 算数２下（啓林館）／小学算数 ２年上（日本文教出版）／小学算数 ２年下（日本文教出版）",
-		"小2図画工作": "ずがこうさく１・２上 わくわくするね（開隆堂）／ずがこうさく１・２下 みつけたよ（開隆堂）／ずがこうさく１・２上 たのしいな おもしろいな（日本文教出版）／ずがこうさく１・２下 たのしいな おもしろいな（日本文教出版）",
-		"小2生活": "どきどきわくわく あたらしい せいかつ 上（東京書籍）／あしたへジャンプ 新しい生活 下（東京書籍）／たのしい せいかつ 上 なかよし（大日本図書）／たのしい せいかつ 下 はっけん（大日本図書）／みんなとまなぶ しょうがっこう せいかつ 上（学校図書）／みんなとまなぶ しょうがっこう せいかつ 下（学校図書）／せいかつ上 みんな なかよし（教育出版）／せいかつ下 なかよしひろがれ（教育出版）／せいかつ 上 あおぞら（信州教育出版）／せいかつ 下 そよかぜ（信州教育出版）／せいかつ 上 まいにち あたらしい（光村図書）／せいかつ 下 だいすき みつけた（光村図書）／わくわく せいかつ上（啓林館）／わくわく せいかつ下（啓林館）／わたしと せいかつ 上 みんな なかよし（日文）／わたしと せいかつ 下 ふれあい だいすき（日文）",
-		"小2道徳": "新訂 新しいどうとく ２（東京書籍）／かがやけ みらい 小学校どうとく２ねん きづき（学校図書）／かがやけ みらい 小学校どうとく２ねん まなび（学校図書）／小学どうとく２ はばたこう明日へ（教育出版）／どうとく ２ きみが いちばん ひかるとき（光村出版）／小学どうとく 生きる 力 ２（日本文教出版）／小学どうとく 生きる 力 ２ どうとくノート（日本文教出版）／小学どうとく ゆたかな こころ ２年（光文書院）／新・みんなのどうとく２（学研教育みらい）／みんなで考え、話し合う 小学生のどうとく２（廣あかつき）／自分を見つめ、考える どうとくノート２（廣あかつき）",
-		"小3音楽": "小学音楽 おんがくのおくりもの ３（教育出版）／小学生の音楽３（教育芸術社）",
-		"小3国語": "新しい国語 三上（東京書籍）／新しい国語 三下（東京書籍）／みんなと学ぶ 小学校 国語 三年 上（学校図書）／みんなと学ぶ 小学校 国語 三年 下（学校図書）／ひろがる言葉 小学国語 三上（教育出版）／ひろがる言葉 小学国語 三下（教育出版）／国語三上 わかば（光村出版）／国語三下 あおぞら（光村出版）／新しい書写 三（東京書籍）／みんなと学ぶ 小学校書写 三年（学校図書）／小学 書写 三年（教育出版）／書写 三年（光村図書）／小学書写 三年（日本文教出版）",
-		"小3算数": "新しい算数 ３上 考えるって おもしろい！（東京書籍）／新しい算数 ３下 考えるって おもしろい！（東京書籍）／たのしい算数３年（大日本図書）／みんなと学ぶ 小学校 算数 ３年上（学校図書）／みんなと学ぶ 小学校 算数 ３年下（学校図書）／小学算数３上（教育出版）／小学算数３下（教育出版）／わくわく 算数３上（啓林館）／わくわく 算数３下（啓林館）／小学算数 ３年上（日本文教出版）／小学算数 ３年下（日本文教出版）",
-		"小3社会": "新しい社会３（東京書籍）／小学社会３（教育出版）／小学社会 ３年（日本文教出版）／新しい地図帳（東京書籍）／楽しく学ぶ 小学生の地図帳３・４・５・６年（帝国書院）",
-		"小3図画工作": "図画工作３・４上 できたらいいな（開隆堂）／図画工作３・４下 力を合わせて（開隆堂）／図画工作３・４上 ためしたよ 見つけたよ（日本文教出版）／図画工作３・４下 ためしたよ 見つけたよ（日本文教出版）",
-		"小3道徳": "新訂 あたらしいどうとく ３（東京書籍）／かがやけ みらい 小学校どうとく３ねん きづき（学校図書）／かがやけ みらい 小学校どうとく３ねん まなび（学校図書）／小学どうとく３ はばたこう明日へ（教育出版）／どうとく ３ きみが いちばん ひかるとき（光村出版）／小学どうとく 生きる 力 ３（日本文教出版）／小学どうとく 生きる 力 ３ どうとくノート（日本文教出版）／小学どうとく ゆたかな心 ３年（光文書院）／新・みんなのどうとく３（学研教育みらい）／みんなで考え、話し合う 小学生のどうとく３（廣あかつき）／自分を見つめ、考える どうとくノート３（廣あかつき）",
-		"小3保健体育": "新しいほけん ３・４（東京書籍）／たのしいほけん ３・４年（大日本図書）／わたしたちのほけん ３・４年（文教社）／小学ほけん ３・４年（光文書院）／みんなのほけん ３・４年（学研）",
-		"小3理科": "新しい理科 ３（東京書籍）／たのしい理科３年（大日本図書）／みんなと学ぶ 小学校理科 ３年（学校図書）／みらいをひらく 小学理科 ３（教育出版）／楽しい理科 3年（信州教育出版）／わくわく理科 ３（啓林館）",
-		"小4音楽": "小学音楽 おんがくのおくりもの ４（教育出版）／小学生の音楽４（教育芸術社）",
-		"小4国語": "新しい国語 四上（東京書籍）／新しい国語 四下（東京書籍）／みんなと学ぶ 小学校 国語 四年 上（学校図書）／みんなと学ぶ 小学校 国語 四年 下（学校図書）／ひろがる言葉 小学国語 四上（教育出版）／ひろがる言葉 小学国語 四下（教育出版）／国語四上 かがやき（光村出版）／国語四下 はばたき（光村出版）／新しい書写 四（東京書籍）／みんなと学ぶ 小学校書写 四年（学校図書）／小学 書写 四年（教育出版）／書写 四年（光村図書）／小学書写 四年（日本文教出版）",
-		"小4算数": "新しい算数 ４上 考えると見方が広がる！（東京書籍）／新しい算数 ４下 考えると見方が広がる！（東京書籍）／たのしい算数４年（大日本図書）／みんなと学ぶ 小学校 算数 ４年上（学校図書）／みんなと学ぶ 小学校 算数 ４年下（学校図書）／小学算数４上（教育出版）／小学算数４下（教育出版）／わくわく 算数４上（啓林館）／わくわく 算数４下（啓林館）／小学算数 ４年上（日本文教出版）／小学算数 ４年下（日本文教出版）",
-		"小4社会": "新しい社会４（東京書籍）／小学社会４（教育出版）／小学社会 ４年（日本文教出版）／新しい地図帳（東京書籍）／楽しく学ぶ 小学生の地図帳３・４・５・６年（帝国書院）",
-		"小4図画工作": "図画工作３・４上 できたらいいな（開隆堂）／図画工作３・４下 力を合わせて（開隆堂）／図画工作３・４上 ためしたよ 見つけたよ（日本文教出版）／図画工作３・４下 ためしたよ 見つけたよ（日本文教出版）",
-		"小4道徳": "新訂 新しいどうとく ４（東京書籍）／かがやけ みらい 小学校道徳４年 きづき（学校図書）／かがやけ みらい 小学校道徳４年 まなび（学校図書）／小学道徳４ はばたこう明日へ（教育出版）／道徳 ４ きみが いちばん ひかるとき（光村出版）／小学どうとく 生きる 力 ４（日本文教出版）／小学どうとく 生きる 力 ４ どうとくノート（日本文教出版）／小学どうとく ゆたかな心 ４年（光文書院）／新・みんなの道徳４（学研教育みらい）／みんなで考え、話し合う 小学生の道徳４（廣あかつき）／自分を見つめ、考える 道徳ノート４（廣あかつき）",
-		"小4保健体育": "新しいほけん ３・４（東京書籍）／たのしいほけん ３・４年（大日本図書）／わたしたちのほけん ３・４年（文教社）／小学ほけん ３・４年（光文書院）／みんなのほけん ３・４年（学研）",
-		"小4理科": "新しい理科 ４（東京書籍）／たのしい理科４年（大日本図書）／みんなと学ぶ 小学校理科 ４年（学校図書）／未来をひらく 小学理科 ４（教育出版）／楽しい理科 4年（信州教育出版）／わくわく理科 ４（啓林館）",
-		"小5音楽": "小学音楽 おんがくのおくりもの ５（教育出版）／小学生の音楽５（教育芸術社）",
-		"小5家庭": "新しい家庭 ５・６（東京書籍）／小学校 わたしたちの家庭科（開隆堂）",
-		"小5外国語": "NEW HORIZON Elementar English Course Picture Dictionary（東京書籍）／Junior Sunshine 5（開隆堂）／JUNIOR TOTAL ENGLISH 1（学校図書）／CROWN Jr. 5（三省堂）／ONE WORLD Smiles 5（教育出版）／Here We Go! 5（光村出版）／Blue Sky elementary 5（啓林館）",
-		"小5国語": "新しい国語 五（東京書籍）／みんなと学ぶ 小学校 国語 五年 上（学校図書）／みんなと学ぶ 小学校 国語 五年 下（学校図書）／ひろがる言葉 小学国語 五上（教育出版）／ひろがる言葉 小学国語 五下（教育出版）／国語五 銀河（光村出版）／新しい書写 五（東京書籍）／みんなと学ぶ 小学校書写 五年（学校図書）／小学 書写 五年（教育出版）／書写 五年（光村図書）／小学書写 五年（日本文教出版）",
-		"小5算数": "新しい算数 ５上 考えると見方が広がる！（東京書籍）／新しい算数 ５下 考えると見方が広がる！（東京書籍）／たのしい算数５年（大日本図書）／みんなと学ぶ 小学校 算数 ５年上（学校図書）／みんなと学ぶ 小学校 算数 ５年下（学校図書）／小学算数５（教育出版）／わくわく 算数５（啓林館）／小学算数 ５年上（日本文教出版）／小学算数 ５年下（日本文教出版）",
-		"小5社会": "新しい社会５（東京書籍）／新しい社会５上（東京書籍）／新しい社会５下（東京書籍）／小学社会５（教育出版）／小学社会 ５年（日本文教出版）／新しい地図帳（東京書籍）／楽しく学ぶ 小学生の地図帳３・４・５・６年（帝国書院）",
-		"小5図画工作": "図画工作５・６上 心をひらいて（開隆堂）／図画工作５・６下 つながる思い（開隆堂）／図画工作５・６上 見つめて 広げて（日本文教出版）／図画工作５・６下 見つめて 広げて（日本文教出版）",
-		"小5道徳": "新訂 新しい道徳 ５（東京書籍）／かがやけ みらい 小学校道徳５年 きづき（学校図書）／かがやけ みらい 小学校道徳５年 まなび（学校図書）／小学道徳５ はばたこう明日へ（教育出版）／道徳 ５ きみが いちばん ひかるとき（光村出版）／小学道徳 生きる 力 ５（日本文教出版）／小学道徳 生きる 力 ５ 道徳ノート（日本文教出版）／小学どうとく ゆたかな心 ５年（光文書院）／新・みんなの道徳５（学研教育みらい）／みんなで考え、話し合う 小学生の道徳５（廣あかつき）／自分を見つめ、考える 道徳ノート５（廣あかつき）",
-		"小5保健体育": "新しい保健 ５・６（東京書籍）／たのしい保健 ５・６年（大日本図書）／わたしたちの保健 ５・６年（文教社）／小学保健 ５・６年（光文書院）／みんなの保健 ５・６年（学研）",
-		"小5理科": "新しい理科 ５（東京書籍）／たのしい理科５年（大日本図書）／みんなと学ぶ 小学校理科 ５年（学校図書）／未来をひらく 小学理科 ５（教育出版）／楽しい理科 5年（信州教育出版）／わくわく理科 ５（啓林館）",
-		"小6音楽": "小学音楽 おんがくのおくりもの ６（教育出版）／小学生の音楽６（教育芸術社）",
-		"小6家庭": "新しい家庭 ５・６（東京書籍）／小学校 わたしたちの家庭科（開隆堂）",
-		"小6外国語": "NEW HORIZON Elementar English Course 5（東京書籍）／NEW HORIZON Elementar English Course Picture Dictionary（東京書籍）／NEW HORIZON Elementar English Course 6（東京書籍）／Junior Sunshine 6（開隆堂）／JUNIOR TOTAL ENGLISH 2（学校図書）／CROWN Jr. 6（三省堂）／ONE WORLD Smiles 6（教育出版）／Here We Go! 6（光村出版）／Blue Sky elementary 6（啓林館）",
-		"小6国語": "新しい国語 六（東京書籍）／みんなと学ぶ 小学校 国語 六年 上（学校図書）／みんなと学ぶ 小学校 国語 六年 下（学校図書）／ひろがる言葉 小学国語 六上（教育出版）／ひろがる言葉 小学国語 六下（教育出版）／国語六 創造（光村出版）／新しい書写 六（東京書籍）／みんなと学ぶ 小学校書写 六年（学校図書）／小学 書写 六年（教育出版）／書写 六年（光村図書）／小学書写 六年（日本文教出版）",
-		"小6算数": "新しい算数 ６ 数学へジャンプ！（東京書籍）／たのしい算数６年（大日本図書）／みんなと学ぶ 小学校 算数 ６年（学校図書）／みんなと学ぶ 小学校 算数 ６年 中学校へのかけ橋（学校図書）／小学算数６（教育出版）／わくわく 算数６（啓林館）／小学算数 ６年（日本文教出版）",
-		"小6社会": "新しい社会６（東京書籍）／新しい社会６ 政治・国際編（東京書籍）／新しい社会６ 歴史編（東京書籍）／小学社会６（教育出版）／小学社会 ６年（日本文教出版）／新しい地図帳（東京書籍）／楽しく学ぶ 小学生の地図帳３・４・５・６年（帝国書院）",
-		"小6図画工作": "図画工作５・６上 心をひらいて（開隆堂）／図画工作５・６下 つながる思い（開隆堂）／図画工作５・６上 見つめて 広げて（日本文教出版）／図画工作５・６下 見つめて 広げて（日本文教出版）",
-		"小6道徳": "新訂 新しい道徳 ６（東京書籍）／かがやけ みらい 小学校道徳６年 きづき（学校図書）／かがやけ みらい 小学校道徳６年 まなび（学校図書）／小学道徳６ はばたこう明日へ（教育出版）／道徳 ６ きみが いちばん ひかるとき（光村出版）／小学道徳 生きる 力 ６（日本文教出版）／小学道徳 生きる 力 ６ 道徳ノート（日本文教出版）／小学どうとく ゆたかな心 ６年（光文書院）／新・みんなの道徳６（学研教育みらい）／みんなで考え、話し合う 小学生の道徳６（廣あかつき）／自分を見つめ、考える 道徳ノート６（廣あかつき）",
-		"小6保健体育": "新しい保健 ５・６（東京書籍）／たのしい保健 ５・６年（大日本図書）／わたしたちの保健 ５・６年（文教社）／小学保健 ５・６年（光文書院）",
-		"小6理科": "新しい理科 ６（東京書籍）／たのしい理科６年（大日本図書）／みんなと学ぶ 小学校理科 ６年（学校図書）／未来をひらく 小学理科 ６（教育出版）／楽しい理科 6年（信州教育出版）／わくわく理科 ６（啓林館）",
-		"中1音楽": "中学音楽 １ 音楽のおくりもの（教育出版）／中学生の音楽 １（教育芸術社）／中学器楽 音楽のおくりもの（教育出版）／中学生の器楽（教育芸術社）",
-		"中1外国語": "NEW HORIZON English Course 1（東京書籍）／SUNSHINE ENGLISH COURSE 1（開隆堂）／NEW CROWN English Series 1（三省堂）／ONE WORLD English Course 1（教育出版）／Here We Go! ENGLISH COURSE 1（光村図書）／BLUE SKY English Course 1（啓林館）",
-		"中1技術・家庭": "新しい技術・家庭 技術分野 未来を創る Technology（東京書籍）／New技術・家庭 技術分野 明日を創造する（教育図書）／New技術・家庭 技術分野 明日を創造する技術ハンドブック（教育図書）／技術・家庭 技術分野 テクノロジーに希望をのせて（開隆堂）／新しい技術・家庭 家庭分野 自立と共生を目指して（東京書籍）／New技術・家庭 家庭分野 くらしを創造する（教育図書）／技術・家庭 家庭分野 生活の土台 自立と共生（開隆堂）",
-		"中1国語": "新しい国語 １（東京書籍）／現代の国語１（三省堂）／伝え合う言葉 中学国語１（教育出版）／国語１（光村図書）／新しい書写 一・二・三年（東京書籍）／現代の書写 一・二・三（三省堂）／中学書写（教育出版）／中学書写 一・二・三年（光村図書）",
-		"中1社会": "新しい社会 地理（東京書籍）／中学社会 地理 地域にまなぶ（教育出版）／社会科 中学生の地理 世界の姿と日本の国土（帝国書院）／中学社会 地理的分野（日本文教出版）／新しい社会 歴史（東京書籍）／中学社会 歴史 未来をひらく（教育出版）／社会科 中学生の歴史 日本の歩みと世界の動き（帝国書院）／中学歴史 日本と世界（山川出版）／中学社会 歴史的分野（日本文教出版）／[最新]新しい日本の歴史（育鵬社）／ともに学ぶ人間の歴史（学び舎）／新しい社会 地図（東京書籍）／中学校社会科地図（帝国書院）",
-		"中1数学": "新しい数学１（東京書籍）／数学の世界１（大日本図書）／中学校数学１（学校図書）／中学数学 １（教育出版）／未来へひろがる数学 １（啓林館）／日々の学びに数学的な見方・考え方をはたらかせる これからの 数学１（数研出版）／見方・考え方がはたらき、問題解決のチカラが高まる これからの 数学１ 探究ノート（数研出版）／中学数学１（日本文教出版）",
-		"中1道徳": "新訂 新しい道徳１（東京書籍）／中学道徳１ とびだそう未来へ（教育出版）／中学道徳 １ きみが いちばん ひかるとき（光村図書）／中学道徳 あすを生きる １（日本文教出版）／中学道徳 あすを生きる １ 道徳ノート（日本文教出版）／新・中学生の道徳 明日への扉 １（学研）／中学生の道徳 自分を見つめる１（廣あかつき）／中学生の道徳ノート 自分を見つめる１（廣あかつき）／道徳 中学１ 生き方から学ぶ（日本教科書）",
-		"中1美術": "美術 １ 発見と創造（開隆堂）／美術１（光村図書）／美術１ 美術との出会い（日本文教出版）",
-		"中1保健体育": "新しい保健体育（東京書籍）／中学校保健体育（大日本図書）／最新 中学校保健体育（大修館書店）／中学保健体育（学研）",
-		"中1理科": "新しい科学１（東京書籍）／理科の世界 １（大日本図書）／中学校科学１（学校図書）／自然の探究 中学理科 １（教育出版）／未来へひろがるサイエンス１（啓林館）",
-		"中2音楽": "中学音楽 ２・3上 音楽のおくりもの（教育出版）／中学音楽 ２・4下 音楽のおくりもの（教育出版）／中学生の音楽 ２・３上（教育芸術社）／中学生の音楽 ２・３下（教育芸術社）／中学器楽 音楽のおくりもの（教育出版）／中学生の器楽（教育芸術社）",
-		"中2外国語": "NEW HORIZON English Course 2（東京書籍）／SUNSHINE ENGLISH COURSE 2（開隆堂）／NEW CROWN English Series 2（三省堂）／ONE WORLD English Course 2（教育出版）／Here We Go! ENGLISH COURSE 2（光村図書）／BLUE SKY English Course 2（啓林館）",
-		"中2技術・家庭": "新しい技術・家庭 技術分野 未来を創る Technology（東京書籍）／New技術・家庭 技術分野 明日を創造する（教育図書）／New技術・家庭 技術分野 明日を創造する技術ハンドブック（教育図書）／技術・家庭 技術分野 テクノロジーに希望をのせて（開隆堂）／新しい技術・家庭 家庭分野 自立と共生を目指して（東京書籍）／New技術・家庭 家庭分野 くらしを創造する（教育図書）／技術・家庭 家庭分野 生活の土台 自立と共生（開隆堂）",
-		"中2国語": "新しい国語 ２（東京書籍）／現代の国語２（三省堂）／伝え合う言葉 中学国語２（教育出版）／国語２（光村図書）／新しい書写 一・二・三年（東京書籍）／現代の書写 一・二・三（三省堂）／中学書写（教育出版）／中学書写 一・二・三年（光村図書）",
-		"中2社会": "新しい社会 地理（東京書籍）／中学社会 地理 地域にまなぶ（教育出版）／社会科 中学生の地理 世界の姿と日本の国土（帝国書院）／中学社会 地理的分野（日本文教出版）／新しい社会 歴史（東京書籍）／中学社会 歴史 未来をひらく（教育出版）／社会科 中学生の歴史 日本の歩みと世界の動き（帝国書院）／中学歴史 日本と世界（山川出版）／中学社会 歴史的分野（日本文教出版）／[最新]新しい日本の歴史（育鵬社）／ともに学ぶ人間の歴史（学び舎）／新しい社会 地図（東京書籍）／中学校社会科地図（帝国書院）",
-		"中2数学": "新しい数学２（東京書籍）／数学の世界２（大日本図書）／中学校数学２（学校図書）／中学数学 ２（教育出版）／未来へひろがる数学 ２（啓林館）／日々の学びに数学的な見方・考え方をはたらかせる これからの 数学２（数研出版）／見方・考え方がはたらき、問題解決のチカラが高まる これからの 数学２ 探究ノート（数研出版）／中学数学２（日本文教出版）",
-		"中2道徳": "新訂 新しい道徳２（東京書籍）／中学道徳２ とびだそう未来へ（教育出版）／中学道徳 ２ きみが いちばん ひかるとき（光村図書）／中学道徳 あすを生きる ２（日本文教出版）／中学道徳 あすを生きる ２ 道徳ノート（日本文教出版）／新・中学生の道徳 明日への扉 ２（学研）／中学生の道徳 自分を考える２（廣あかつき）／中学生の道徳ノート 自分を考える２（廣あかつき）／道徳 中学２ 生き方を見つめる（日本教科書）",
-		"中2美術": "美術 ２・３ 探求と継承（開隆堂）／美術２・３（光村図書）／美術２・３上 学びの実感と広がり（日本文教出版）／美術２・３下 学びの探求と未来（日本文教出版）",
-		"中2保健体育": "新しい保健体育（東京書籍）／中学校保健体育（大日本図書）／最新 中学校保健体育（大修館書店）／中学保健体育（学研）",
-		"中2理科": "新しい科学２（東京書籍）／理科の世界 ２（大日本図書）／中学校科学２（学校図書）／自然の探究 中学理科 ２（教育出版）／未来へひろがるサイエンス２（啓林館）",
-		"中3音楽": "中学音楽 ２・3上 音楽のおくりもの（教育出版）／中学音楽 ２・4下 音楽のおくりもの（教育出版）／中学生の音楽 ２・３上（教育芸術社）／中学生の音楽 ２・３下（教育芸術社）／中学器楽 音楽のおくりもの（教育出版）／中学生の器楽（教育芸術社）",
-		"中3外国語": "NEW HORIZON English Course 3（東京書籍）／SUNSHINE ENGLISH COURSE 3（開隆堂）／NEW CROWN English Series 3（三省堂）／ONE WORLD English Course 3（教育出版）／Here We Go! ENGLISH COURSE 3（光村図書）／BLUE SKY English Course 3（啓林館）",
-		"中3技術・家庭": "新しい技術・家庭 技術分野 未来を創る Technology（東京書籍）／New技術・家庭 技術分野 明日を創造する（教育図書）／New技術・家庭 技術分野 明日を創造する技術ハンドブック（教育図書）／技術・家庭 技術分野 テクノロジーに希望をのせて（開隆堂）／新しい技術・家庭 家庭分野 自立と共生を目指して（東京書籍）／New技術・家庭 家庭分野 くらしを創造する（教育図書）／技術・家庭 家庭分野 生活の土台 自立と共生（開隆堂）",
-		"中3国語": "新しい国語 ３（東京書籍）／現代の国語３（三省堂）／伝え合う言葉 中学国語３（教育出版）／国語３（光村図書）／新しい書写 一・二・三年（東京書籍）／現代の書写 一・二・三（三省堂）／中学書写（教育出版）／中学書写 一・二・三年（光村図書）",
-		"中3社会": "新しい社会 歴史（東京書籍）／中学社会 歴史 未来をひらく（教育出版）／社会科 中学生の歴史 日本の歩みと世界の動き（帝国書院）／中学歴史 日本と世界（山川出版）／中学社会 歴史的分野（日本文教出版）／[最新]新しい日本の歴史（育鵬社）／ともに学ぶ人間の歴史（学び舎）／新しい社会 公民（東京書籍）／中学社会 公民 ともに生きる（教育出版）／社会科 中学生の公民 よりよい社会を目指して（帝国書院）／中学社会 公民的分野（日本文教出版）／新しい公民教科書（自由社）／[最新]新しいみんなの公民（育鵬社）／新しい社会 地図（東京書籍）／中学校社会科地図（帝国書院）",
-		"中3数学": "新しい数学３（東京書籍）／数学の世界３（大日本図書）／中学校数学３（学校図書）／中学数学 ３（教育出版）／未来へひろがる数学 ３（啓林館）／日々の学びに数学的な見方・考え方をはたらかせる これからの 数学３（数研出版）／見方・考え方がはたらき、問題解決のチカラが高まる これからの 数学３ 探究ノート（数研出版）／中学数学３（日本文教出版）",
-		"中3道徳": "新訂 新しい道徳３（東京書籍）／中学道徳３ とびだそう未来へ（教育出版）／中学道徳 ３ きみが いちばん ひかるとき（光村図書）／中学道徳 あすを生きる ３（日本文教出版）／中学道徳 あすを生きる ３ 道徳ノート（日本文教出版）／新・中学生の道徳 明日への扉 ３（学研）／中学生の道徳 自分をのばす３（廣あかつき）／中学生の道徳ノート 自分をのばす３（廣あかつき）／道徳 中学３ 生き方を創造する（日本教科書）",
-		"中3美術": "美術 ２・３ 探求と継承（開隆堂）／美術２・３（光村図書）／美術２・３上 学びの実感と広がり（日本文教出版）／美術２・３下 学びの探求と未来（日本文教出版）",
-		"中3保健体育": "新しい保健体育（東京書籍）／中学校保健体育（大日本図書）／最新 中学校保健体育（大修館書店）／中学保健体育（学研）",
-		"中3理科": "新しい科学３（東京書籍）／理科の世界 ３（大日本図書）／中学校科学３（学校図書）／自然の探究 中学理科 ３（教育出版）／未来へひろがるサイエンス３（啓林館）"
-	},
-	"A-03-b": {
-		"新しい理科 ３（東京書籍）": "1 春のしぜんにとび出そう／2 たねをまこう （植物を育てよう1）／3 チョウを育てよう （こん虫を育てよう1）／4 風やゴムで動かそう／5 こん虫を調べよう／6 太陽をかげを調べよう／7 太陽の光を調べよう （太陽を調べよう1）／8 音を出して調べよう／9 物の重さをくらべよう／10 明かりをつけよう／11 じしゃくにつけよう",
-		"新しい理科 ４（東京書籍）": "1 あたたかくなると（あたたかさと生き物1）／2 動物のからだのつくりと運動／3 天気と気温／4 電流のはたらき／5 雨水のゆくえと地面のようす／6 暑くなると（あたたかさと生き物2）／7 月や星の見え方／8 自然のなかの水のすがた／9 すずしくなると（あたたかさと生き物3）／10 とじこめた空気と水（物のせいしつを調べよう1）／11 物の体積と温度（物のせいしつを調べよう2）／12 物のあたたまり方（物のせいしつを調べよう3）／13 寒くなると（あたたかさと生き物4）／14 水のすがたと温度（物のせいしつを調べよう4）／15 生き物の１年をふり返って（あたたかさと生き物4）",
-		"新しい理科 ５（東京書籍）": "1 天気の変化（天気を予想しよう1）／2 植物の発芽と成長（生命のつながりを考えよう1）／3 魚のたんじょう（生命のつながりを考えよう2）／4 花から実へ（生命のつながりを考えよう3）／5 台風と天気の変化（天気を予想しよう2）／6 流れる水のはたらき／7 物のとけ方／8 人のたんじょう（生命のつながりを考えよう4）／9 電流がうみ出す力／10 ふりこのきまり",
-		"新しい理科 ６（東京書籍）": "1 物の燃え方と空気／2 動物のからだのはたらき／3 植物のからだのはたらき／4 生き物のくらしと環境／5 月の形と太陽／6 大地のつくり（大地のつくりと変化1）／7 変わり続ける大地（大地のつくりと変化2）／8 てこのはたらき／9 電気と私たちのくらし／10 水溶液の性質とはたらき／11 地球に生きる",
-		"新しい科学１（東京書籍）": "単元１ 植物の世界 ＞ 第１章 花のつくりとはたらき／単元１ 植物の世界 ＞ 第２章 葉・茎・根のつくりとはたらき／単元１ 植物の世界 ＞ 第３章 植物の分類／単元２ 身のまわりの物質 ＞ 第１章 身のまわりの物質とその性質／単元２ 身のまわりの物質 ＞ 第２章 気体の性質／単元２ 身のまわりの物質 ＞ 第３章 水溶液の性質／単元２ 身のまわりの物質 ＞ 第４章 物質の姿と状態変化／単元３ 身のまわりの現象 ＞ 第１章 光の世界／単元３ 身のまわりの現象 ＞ 第２章 音の世界／単元３ 身のまわりの現象 ＞ 第３章 力の世界／単元４ 大地の変化 ＞ 第１章 火をふく大地／単元４ 大地の変化 ＞ 第２章 動き続ける大地／単元４ 大地の変化 ＞ 第３章 地層から読みとる大地の変化",
-		"新しい科学２（東京書籍）": "単元１ 化学変化と原子・分子 ＞ 第１章 物質のなり立ち／単元１ 化学変化と原子・分子 ＞ 第２章 物質どうしの化学変化／単元１ 化学変化と原子・分子 ＞ 第３章 酸素がかかわる化学変化／単元１ 化学変化と原子・分子 ＞ 第４章 化学変化と物質の質量／単元１ 化学変化と原子・分子 ＞ 第５章 化学変化とその利用／単元２ 動物の生活と生物の変遷 ＞ 第１章 生物と細胞／単元２ 動物の生活と生物の変遷 ＞ 第２章 動物のからだのつくりとはたらき／単元２ 動物の生活と生物の変遷 ＞ 第３章 動物の分類／単元２ 動物の生活と生物の変遷 ＞ 第４章生物の変遷と進化／単元３ 天気とその変化 ＞ 第１章 気象観測と雲のでき方／単元３ 天気とその変化 ＞ 第２章 前線とそのまわりの天気の変化／単元３ 天気とその変化 ＞ 第３章 大気の動きと日本の天気／単元４ 電気の世界 ＞ 第１章 静電気と電流／単元４ 電気の世界 ＞ 第２章 電流の性質／単元４ 電気の世界 ＞ 第３章 電流と磁界",
-		"新しい科学３（東京書籍）": "単元１ 化学変化とイオン ＞ 第１章 水溶液とイオン／単元１ 化学変化とイオン ＞ 第２章 化学変化と電池／単元１ 化学変化とイオン ＞ 第３章 酸、アルカリとイオン／単元２ 生命の連続性 ＞ 第１章 生物の成長と生殖／単元２ 生命の連続性 ＞ 第２章 遺伝の規則性と遺伝子／単元３ 運動とエネルギー ＞ 第１章 物体のいろいろな運動／単元３ 運動とエネルギー ＞ 第２章 力の規則性／単元３ 運動とエネルギー ＞ 第３章 エネルギーと仕事／単元４ 地球と宇宙 ＞ 第１章 宇宙の広がり／単元４ 地球と宇宙 ＞ 第２章 地球の運動と天体の動き／単元４ 地球と宇宙 ＞ 第３章 月と惑星の見え方／単元５ 地球と私たちの未来のために ＞ 第１章 自然のなかの生物／単元５ 地球と私たちの未来のために ＞ 第２章 自然環境の調査と保全／単元５ 地球と私たちの未来のために ＞ 第３章 自然の恵みと災害／単元５ 地球と私たちの未来のために ＞ 第４章 科学技術と人間",
-		"新しい社会３（東京書籍）": "１ わたしのまち みんなのまち ＞ 0 学校のまわり／１ わたしのまち みんなのまち ＞ 1 市の様子／２ はたらく人とわたしたちのくらし ＞ 1 農家の仕事／２ はたらく人とわたしたちのくらし ＞ 2 工場の仕事／２ はたらく人とわたしたちのくらし ＞ 2 店ではたらく人／３ くらしを守る ＞ 1 火事からくらしを守る／３ くらしを守る ＞ 2 事故や事件からくらしを守る／４ 市のうつりかわり ＞ 1 市の様子と人々のくらしのうつりかわり／１ わたしたちの県 ＞ 0 日本地図を広げて",
-		"新しい社会４（東京書籍）": "１ わたしたちの県 ＞ 1 県の広がり／２ 住みよいくらしをつくる ＞ 1 水はどこから／２ 住みよいくらしをつくる ＞ 2 ごみのしょりと利用／３ 自然災害からくらしを守る ＞ 1 地震からくらしを守る／４ きょう土の伝統・文化と先人たち ＞ 1 残したいもの　伝えたいもの／４ きょう土の伝統・文化と先人たち ＞ 2 谷に囲まれた台地に水を引く／５ 特色ある地いきと人々のくらし ＞ 1 すずりをつくるまち・石巻市雄勝町／５ 特色ある地いきと人々のくらし ＞ 2 国際交流に取り組むまち・仙台市／５ 特色ある地いきと人々のくらし ＞ 3 美しい景観を生かすまち・松島町／古いまちなみを生かすまち・登米市登米町（選択）",
-		"新しい社会５（東京書籍）": "１ わたしたちの国土 ＞ 1 世界の中の国土／１ わたしたちの国土 ＞ 2 国土の地形の特色／１ わたしたちの国土 ＞ 3 低い土地のくらし／１ わたしたちの国土 ＞ 3 高い土地のくらし／１ わたしたちの国土 ＞ 4 国土の気候の特色／１ わたしたちの国土 ＞ 5 あたたかい土地のくらし／１ わたしたちの国土 ＞ 5 寒い土地のくらし／２ わたしたちの生活と食料生産 ＞ 1 くらしを支える食料生産／２ わたしたちの生活と食料生産 ＞ 2 米づくりのさかんな地域／２ わたしたちの生活と食料生産 ＞ 3 水産業のさかんな地域／２ わたしたちの生活と食料生産 ＞ 4 これからの食糧生産とわたしたち／３ わたしたちの生活と工業生産 ＞ 1 くらしを支える工業生産／３ わたしたちの生活と工業生産 ＞ 2 自動車をつくる工業／３ わたしたちの生活と工業生産 ＞ 3 工業生産を支える輸送と貿易／３ わたしたちの生活と工業生産 ＞ 4 これからの工業生産とわたしたち／４ 情報化した社会と産業の発展 ＞ 1 情報産業とわたしたちのくらし／４ 情報化した社会と産業の発展 ＞ 2 情報を生かす産業／４ 情報化した社会と産業の発展 ＞ 3 情報を生かすわたしたち／５ わたしたちの生活と環境 ＞ 1 自然災害を防ぐ／５ わたしたちの生活と環境 ＞ 2 わたしたちの生活と森林／５ わたしたちの生活と環境 ＞ 3 環境を守るわたしたち",
-		"新しい社会６（東京書籍）": "１ わたしたちの生活と政治 ＞ 1 わたしたちのくらしと日本国憲法／１ わたしたちの生活と政治 ＞ 2 国の政治のしくみと選挙／１ わたしたちの生活と政治 ＞ 3 子育て支援の願いを実現する政治／１ わたしたちの生活と政治 ＞ 3 震災復興の願いを実現する政治／２ 日本の歴史 ＞ 1 縄文のむらから古墳のくにへ／２ 日本の歴史 ＞ 2 天皇中心の国づくり／２ 日本の歴史 ＞ 3 貴族のくらし／２ 日本の歴史 ＞ 4 武士の世の中へ／２ 日本の歴史 ＞ 5 今に伝わる室町文化／２ 日本の歴史 ＞ 6 戦国の世から天下統一へ／２ 日本の歴史 ＞ 7 江戸幕府と政治の安定／２ 日本の歴史 ＞ 8 町人の文化と新しい学問／２ 日本の歴史 ＞ 9 明治の国づくりを進めた人々／２ 日本の歴史 ＞ 10 世界に歩み出した日本／２ 日本の歴史 ＞ 11 長く続いた戦争と人々のくらし／２ 日本の歴史 ＞ 12 新しい日本、平和な日本へ／３ 世界の中の日本 ＞ 1 日本とつながりの深い国々／３ 世界の中の日本 ＞ 2 世界の未来と日本の役割",
-		"新しい社会 歴史（東京書籍）": "第１章 歴史の流れをとらえよう／第２章 古代までの日本 ＞ 1節 世界の古代文明と宗教のおこり／第２章 古代までの日本 ＞ 2節 日本列島の誕生と大陸の交流／第２章 古代までの日本 ＞ 3節 古代国家の歩みと東アジア世界／第３章 中世の日本 ＞ 1節 武士の台頭と鎌倉幕府／第３章 中世の日本 ＞ 2節 東アジア世界との関わりと社会の変動／第４章 近世の日本 ＞ 1節 ヨーロッパ人との出会いと全国統一／第４章 近世の日本 ＞ 2節 江戸幕府の成立と鎖国／第４章 近世の日本 ＞ 3節 産業の発達と幕府政治の動き／第５章 開国と近代日本の歩み ＞ 1節 欧米の進出と日本の開国／第５章 開国と近代日本の歩み ＞ 2節 明治維新／第５章 開国と近代日本の歩み ＞ 3節 日清・日露戦争と近代産業／第６章 二度の世界大戦と日本 ＞ 1節 第一次世界大戦と日本／第６章 二度の世界大戦と日本 ＞ 2節 世界恐慌と日本の中国侵略／第６章 二度の世界大戦と日本 ＞ 3節 第二次世界大戦と日本／第７章 現代の日本と世界 ＞ 1節 戦後日本の発展と国際社会／第７章 現代の日本と世界 ＞ 2節 新たな時代の日本と世界",
-		"新しい社会 地理（東京書籍）": "第１章 世界の姿／第２章 世界各地の人々の生活と環境／第３章 世界の諸地域 ＞ 1節 アジア州／第３章 世界の諸地域 ＞ 2節 ヨーロッパ州／第３章 世界の諸地域 ＞ 3節 アフリカ州／第３章 世界の諸地域 ＞ 4節 北アメリカ州／第３章 世界の諸地域 ＞ 5節 南アメリカ州／第３章 世界の諸地域 ＞ 6節 オセアニア州／第４章 世界のさまざまな地域の調査／第１章 日本の姿／第２章 世界から見た日本の姿 ＞ 1節 世界から見た日本の自然環境／第２章 世界から見た日本の姿 ＞ 2節 世界から見た日本の人口／第２章 世界から見た日本の姿 ＞ 3節 世界から見た日本の資源・エネルギーと産業／第２章 世界から見た日本の姿 ＞ 4節 世界と日本の結び付き／第３章 日本の諸地域 ＞ 1節 九州地方／第３章 日本の諸地域 ＞ 2節 中国・四国地方／第３章 日本の諸地域 ＞ 3節 近畿地方／第３章 日本の諸地域 ＞ 4節 中部地方／第３章 日本の諸地域 ＞ 5節 関東地方／第３章 日本の諸地域 ＞ 6節 東北地方／第３章 日本の諸地域 ＞ 7節 北海道地方／第４章 身近な地域の調査",
-		"新しい社会 公民（東京書籍）": "第１章 現代社会と私たちの生活 ＞ 1節 現代社会の特色と私たち／第１章 現代社会と私たちの生活 ＞ 2節 私たちの生活と文化／第１章 現代社会と私たちの生活 ＞ 3節 現代社会の見方や考え方／第２章 個人の尊重と日本国憲法 ＞ 1節 人権と日本国憲法／第２章 個人の尊重と日本国憲法 ＞ 2節 人権と共生社会／第２章 個人の尊重と日本国憲法 ＞ 3節 これからの人権保障／第３章 現代の民主政治と社会 ＞ 1節 現代の民主政治／第３章 現代の民主政治と社会 ＞ 2節 国の政治の仕組み／第３章 現代の民主政治と社会 ＞ 3節 地方自治と私たち／第４章 私たちの暮らしと経済 ＞ 1節 消費生活と経済／第４章 私たちの暮らしと経済 ＞ 2節 生産と労働／第４章 私たちの暮らしと経済 ＞ 3節 価格の働きと金融／第４章 私たちの暮らしと経済 ＞ 4節 政府の役割と国民の福祉／第４章 私たちの暮らしと経済 ＞ 5節 これからの経済と社会／第５章 地球社会と私たち ＞ 1節 国際社会の仕組み／第５章 地球社会と私たち ＞ 2節 さまざまな国際問題／第５章 地球社会と私たち ＞ 3節 これからの地球社会と日本／終章 より良い社会を目指して"
-	}
+  "A-02": {
+      "小1": "国語／算数／生活／音楽／図画工作／体育／道徳／特別活動／その他",
+      "小2": "国語／算数／生活／音楽／図画工作／体育／道徳／特別活動／その他",
+      "小3": "国語／社会／算数／理科／音楽／図画工作／体育／道徳／外国語活動／総合的な学習の時間／特別活動／その他",
+      "小4": "国語／社会／算数／理科／音楽／図画工作／体育／道徳／外国語活動／総合的な学習の時間／特別活動／その他",
+      "小5": "国語／社会／算数／理科／音楽／図画工作／家庭／体育／外国語／道徳／総合的な学習の時間／特別活動／その他",
+      "小6": "国語／社会／算数／理科／音楽／図画工作／家庭／体育／外国語／道徳／総合的な学習の時間／特別活動／その他",
+      "中1": "国語／社会／数学／理科／音楽／美術／保健体育／技術・家庭／外国語／道徳／総合的な学習の時間／特別活動／その他",
+      "中2": "国語／社会／数学／理科／音楽／美術／保健体育／技術・家庭／外国語／道徳／総合的な学習の時間／特別活動／その他",
+      "中3": "国語／社会／数学／理科／音楽／美術／保健体育／技術・家庭／外国語／道徳／総合的な学習の時間／特別活動／その他",
+      "高1": "国語／地理歴史／公民／数学／理科／保健体育／芸術／外国語／家庭／情報／理数／総合的な探究の時間／特別活動／その他",
+      "高2": "国語／地理歴史／公民／数学／理科／保健体育／芸術／外国語／家庭／情報／理数／総合的な探究の時間／特別活動／その他",
+      "高3": "国語／地理歴史／公民／数学／理科／保健体育／芸術／外国語／家庭／情報／理数／総合的な探究の時間／特別活動／その他"
+  },
+  "A-03-a": {
+    "小1音楽": "小学音楽 おんがくのおくりもの １（教育出版）／小学生のおんがく１（教育芸術社）",
+    "小1国語": "あたらしいこくご 上（東京書籍）／あたらしいこくご 下（東京書籍）／みんなとまなぶ しょうがっこう こくご 一ねん 上（学校図書）／みんなとまなぶ しょうがっこう こくご 一ねん 下（学校図書）／ひろがることば しょうがくこくご 一上（教育出版）／ひろがることば しょうがくこくご 一下（教育出版）／こくご一上 かざぐるま（光村出版）／こくご一下 ともだち（光村出版）／あたらしい しょしゃ 一（東京書籍）／みんなとまなぶ しょうがっこうしょしゃ 一ねん（学校図書）／しょうがく しょしゃ 一ねん（教育出版）／しょしゃ 一ねん（光村図書）／しょうがくしょしゃ 一ねん（日本文教出版）",
+    "小1算数": "あたらしい さんすう １① さんすうの とびら（東京書籍）／あたらしい さんすう １② さんすう だいすき！（東京書籍）／たのしいさんすう１ねん（大日本図書）／みんなとまなぶ しょうがっこう さんすう １ねん上（学校図書）／みんなとまなぶ しょうがっこう さんすう １ねん下（学校図書）／しょうがくさんすう１（教育出版）／わくわく さんすう１（啓林館）／しょうがく さんすう １ねん上（日本文教出版）／しょうがく さんすう １ねん下（日本文教出版）",
+    "小1図画工作": "ずがこうさく１・２上 わくわくするね（開隆堂）／ずがこうさく１・２下 みつけたよ（開隆堂）／ずがこうさく１・２上 たのしいな おもしろいな（日本文教出版）／ずがこうさく１・２下 たのしいな おもしろいな（日本文教出版）",
+    "小1生活": "どきどきわくわく あたらしい せいかつ 上（東京書籍）／あしたへジャンプ 新しい生活 下（東京書籍）／たのしい せいかつ 上 なかよし（大日本図書）／たのしい せいかつ 下 はっけん（大日本図書）／みんなとまなぶ しょうがっこう せいかつ 上（学校図書）／みんなとまなぶ しょうがっこう せいかつ 下（学校図書）／せいかつ上 みんな なかよし（教育出版）／せいかつ下 なかよしひろがれ（教育出版）／せいかつ 上 あおぞら（信州教育出版）／せいかつ 下 そよかぜ（信州教育出版）／せいかつ 上 まいにち あたらしい（光村図書）／せいかつ 下 だいすき みつけた（光村図書）／わくわく せいかつ上（啓林館）／わくわく せいかつ下（啓林館）／わたしと せいかつ 上 みんな なかよし（日文）／わたしと せいかつ 下 ふれあい だいすき（日文）",
+    "小1道徳": "新訂 あたらしいどうとく １（東京書籍）／かがやけ みらい しょうがっこうどうとく１ねん きづき（学校図書）／かがやけ みらい しょうがっこうどうとく１ねん まなび（学校図書）／しょうがくどうとく１ はばたこうあすへ（教育出版）／どうとく １ きみが いちばん ひかるとき（光村出版）／しょうがくどうとく いきるちから １（日本文教出版）／しょうがくどうとく いきるちから １ どうとくノート（日本文教出版）／しょうがくどうとく ゆたかな こころ １年（光文書院）／新・みんなのどうとく１（学研教育みらい）／みんなでかんがえ、はなしあう しょうがくせいのどうとく（廣あかつき）／じぶんをみつめ、かんがえる どうとくノート１（廣あかつき）",
+    "小2音楽": "小学音楽 おんがくのおくりもの ２（教育出版）／小学生の音楽２（教育芸術社）",
+    "小2国語": "新しい国語 二上（東京書籍）／新しい国語 二下（東京書籍）／みんなと学ぶ 小学校 こくご 二年 上（学校図書）／みんなと学ぶ 小学校 こくご 二年 下（学校図書）／ひろがることば 小学国語 二上（教育出版）／ひろがることば 小学国語 二下（教育出版）／こくご二上 たんぽぽ（光村出版）／こくご二下 赤とんぼ（光村出版）／新しい しょしゃ 二（東京書籍）／みんなと学ぶ 小学校しょしゃ 二年（学校図書）／小学 しょしゃ 二年（教育出版）／しょしゃ 二年（光村図書）／小学しょしゃ 二年（日本文教出版）",
+    "小2算数": "新しい算数 ２上 考えるって おもしろい！（東京書籍）／新しい算数 ２下 考えるって おもしろい！（東京書籍）／たのしい算数２年（大日本図書）／みんなと学ぶ 小学校 算数 ２年上（学校図書）／みんなと学ぶ 小学校 算数 ２年下（学校図書）／小学算数２上（教育出版）／小学算数２下（教育出版）／わくわく 算数２上（啓林館）／わくわく 算数２下（啓林館）／小学算数 ２年上（日本文教出版）／小学算数 ２年下（日本文教出版）",
+    "小2図画工作": "ずがこうさく１・２上 わくわくするね（開隆堂）／ずがこうさく１・２下 みつけたよ（開隆堂）／ずがこうさく１・２上 たのしいな おもしろいな（日本文教出版）／ずがこうさく１・２下 たのしいな おもしろいな（日本文教出版）",
+    "小2生活": "どきどきわくわく あたらしい せいかつ 上（東京書籍）／あしたへジャンプ 新しい生活 下（東京書籍）／たのしい せいかつ 上 なかよし（大日本図書）／たのしい せいかつ 下 はっけん（大日本図書）／みんなとまなぶ しょうがっこう せいかつ 上（学校図書）／みんなとまなぶ しょうがっこう せいかつ 下（学校図書）／せいかつ上 みんな なかよし（教育出版）／せいかつ下 なかよしひろがれ（教育出版）／せいかつ 上 あおぞら（信州教育出版）／せいかつ 下 そよかぜ（信州教育出版）／せいかつ 上 まいにち あたらしい（光村図書）／せいかつ 下 だいすき みつけた（光村図書）／わくわく せいかつ上（啓林館）／わくわく せいかつ下（啓林館）／わたしと せいかつ 上 みんな なかよし（日文）／わたしと せいかつ 下 ふれあい だいすき（日文）",
+    "小2道徳": "新訂 新しいどうとく ２（東京書籍）／かがやけ みらい 小学校どうとく２ねん きづき（学校図書）／かがやけ みらい 小学校どうとく２ねん まなび（学校図書）／小学どうとく２ はばたこう明日へ（教育出版）／どうとく ２ きみが いちばん ひかるとき（光村出版）／小学どうとく 生きる 力 ２（日本文教出版）／小学どうとく 生きる 力 ２ どうとくノート（日本文教出版）／小学どうとく ゆたかな こころ ２年（光文書院）／新・みんなのどうとく２（学研教育みらい）／みんなで考え、話し合う 小学生のどうとく２（廣あかつき）／自分を見つめ、考える どうとくノート２（廣あかつき）",
+    "小3音楽": "小学音楽 おんがくのおくりもの ３（教育出版）／小学生の音楽３（教育芸術社）",
+    "小3国語": "新しい国語 三上（東京書籍）／新しい国語 三下（東京書籍）／みんなと学ぶ 小学校 国語 三年 上（学校図書）／みんなと学ぶ 小学校 国語 三年 下（学校図書）／ひろがる言葉 小学国語 三上（教育出版）／ひろがる言葉 小学国語 三下（教育出版）／国語三上 わかば（光村出版）／国語三下 あおぞら（光村出版）／新しい書写 三（東京書籍）／みんなと学ぶ 小学校書写 三年（学校図書）／小学 書写 三年（教育出版）／書写 三年（光村図書）／小学書写 三年（日本文教出版）",
+    "小3算数": "新しい算数 ３上 考えるって おもしろい！（東京書籍）／新しい算数 ３下 考えるって おもしろい！（東京書籍）／たのしい算数３年（大日本図書）／みんなと学ぶ 小学校 算数 ３年上（学校図書）／みんなと学ぶ 小学校 算数 ３年下（学校図書）／小学算数３上（教育出版）／小学算数３下（教育出版）／わくわく 算数３上（啓林館）／わくわく 算数３下（啓林館）／小学算数 ３年上（日本文教出版）／小学算数 ３年下（日本文教出版）",
+    "小3社会": "新しい社会３（東京書籍）／小学社会３（教育出版）／小学社会 ３年（日本文教出版）／新しい地図帳（東京書籍）／楽しく学ぶ 小学生の地図帳３・４・５・６年（帝国書院）",
+    "小3図画工作": "図画工作３・４上 できたらいいな（開隆堂）／図画工作３・４下 力を合わせて（開隆堂）／図画工作３・４上 ためしたよ 見つけたよ（日本文教出版）／図画工作３・４下 ためしたよ 見つけたよ（日本文教出版）",
+    "小3道徳": "新訂 あたらしいどうとく ３（東京書籍）／かがやけ みらい 小学校どうとく３ねん きづき（学校図書）／かがやけ みらい 小学校どうとく３ねん まなび（学校図書）／小学どうとく３ はばたこう明日へ（教育出版）／どうとく ３ きみが いちばん ひかるとき（光村出版）／小学どうとく 生きる 力 ３（日本文教出版）／小学どうとく 生きる 力 ３ どうとくノート（日本文教出版）／小学どうとく ゆたかな心 ３年（光文書院）／新・みんなのどうとく３（学研教育みらい）／みんなで考え、話し合う 小学生のどうとく３（廣あかつき）／自分を見つめ、考える どうとくノート３（廣あかつき）",
+    "小3保健体育": "新しいほけん ３・４（東京書籍）／たのしいほけん ３・４年（大日本図書）／わたしたちのほけん ３・４年（文教社）／小学ほけん ３・４年（光文書院）／みんなのほけん ３・４年（学研）",
+    "小3理科": "新しい理科 ３（東京書籍）／たのしい理科３年（大日本図書）／みんなと学ぶ 小学校理科 ３年（学校図書）／みらいをひらく 小学理科 ３（教育出版）／楽しい理科 3年（信州教育出版）／わくわく理科 ３（啓林館）",
+    "小4音楽": "小学音楽 おんがくのおくりもの ４（教育出版）／小学生の音楽４（教育芸術社）",
+    "小4国語": "新しい国語 四上（東京書籍）／新しい国語 四下（東京書籍）／みんなと学ぶ 小学校 国語 四年 上（学校図書）／みんなと学ぶ 小学校 国語 四年 下（学校図書）／ひろがる言葉 小学国語 四上（教育出版）／ひろがる言葉 小学国語 四下（教育出版）／国語四上 かがやき（光村出版）／国語四下 はばたき（光村出版）／新しい書写 四（東京書籍）／みんなと学ぶ 小学校書写 四年（学校図書）／小学 書写 四年（教育出版）／書写 四年（光村図書）／小学書写 四年（日本文教出版）",
+    "小4算数": "新しい算数 ４上 考えると見方が広がる！（東京書籍）／新しい算数 ４下 考えると見方が広がる！（東京書籍）／たのしい算数４年（大日本図書）／みんなと学ぶ 小学校 算数 ４年上（学校図書）／みんなと学ぶ 小学校 算数 ４年下（学校図書）／小学算数４上（教育出版）／小学算数４下（教育出版）／わくわく 算数４上（啓林館）／わくわく 算数４下（啓林館）／小学算数 ４年上（日本文教出版）／小学算数 ４年下（日本文教出版）",
+    "小4社会": "新しい社会４（東京書籍）／小学社会４（教育出版）／小学社会 ４年（日本文教出版）／新しい地図帳（東京書籍）／楽しく学ぶ 小学生の地図帳３・４・５・６年（帝国書院）",
+    "小4図画工作": "図画工作３・４上 できたらいいな（開隆堂）／図画工作３・４下 力を合わせて（開隆堂）／図画工作３・４上 ためしたよ 見つけたよ（日本文教出版）／図画工作３・４下 ためしたよ 見つけたよ（日本文教出版）",
+    "小4道徳": "新訂 新しいどうとく ４（東京書籍）／かがやけ みらい 小学校道徳４年 きづき（学校図書）／かがやけ みらい 小学校道徳４年 まなび（学校図書）／小学道徳４ はばたこう明日へ（教育出版）／道徳 ４ きみが いちばん ひかるとき（光村出版）／小学どうとく 生きる 力 ４（日本文教出版）／小学どうとく 生きる 力 ４ どうとくノート（日本文教出版）／小学どうとく ゆたかな心 ４年（光文書院）／新・みんなの道徳４（学研教育みらい）／みんなで考え、話し合う 小学生の道徳４（廣あかつき）／自分を見つめ、考える 道徳ノート４（廣あかつき）",
+    "小4保健体育": "新しいほけん ３・４（東京書籍）／たのしいほけん ３・４年（大日本図書）／わたしたちのほけん ３・４年（文教社）／小学ほけん ３・４年（光文書院）／みんなのほけん ３・４年（学研）",
+    "小4理科": "新しい理科 ４（東京書籍）／たのしい理科４年（大日本図書）／みんなと学ぶ 小学校理科 ４年（学校図書）／未来をひらく 小学理科 ４（教育出版）／楽しい理科 4年（信州教育出版）／わくわく理科 ４（啓林館）",
+    "小5音楽": "小学音楽 おんがくのおくりもの ５（教育出版）／小学生の音楽５（教育芸術社）",
+    "小5家庭": "新しい家庭 ５・６（東京書籍）／小学校 わたしたちの家庭科（開隆堂）",
+    "小5外国語": "NEW HORIZON Elementar English Course Picture Dictionary（東京書籍）／Junior Sunshine 5（開隆堂）／JUNIOR TOTAL ENGLISH 1（学校図書）／CROWN Jr. 5（三省堂）／ONE WORLD Smiles 5（教育出版）／Here We Go! 5（光村出版）／Blue Sky elementary 5（啓林館）",
+    "小5国語": "新しい国語 五（東京書籍）／みんなと学ぶ 小学校 国語 五年 上（学校図書）／みんなと学ぶ 小学校 国語 五年 下（学校図書）／ひろがる言葉 小学国語 五上（教育出版）／ひろがる言葉 小学国語 五下（教育出版）／国語五 銀河（光村出版）／新しい書写 五（東京書籍）／みんなと学ぶ 小学校書写 五年（学校図書）／小学 書写 五年（教育出版）／書写 五年（光村図書）／小学書写 五年（日本文教出版）",
+    "小5算数": "新しい算数 ５上 考えると見方が広がる！（東京書籍）／新しい算数 ５下 考えると見方が広がる！（東京書籍）／たのしい算数５年（大日本図書）／みんなと学ぶ 小学校 算数 ５年上（学校図書）／みんなと学ぶ 小学校 算数 ５年下（学校図書）／小学算数５（教育出版）／わくわく 算数５（啓林館）／小学算数 ５年上（日本文教出版）／小学算数 ５年下（日本文教出版）",
+    "小5社会": "新しい社会５（東京書籍）／新しい社会５上（東京書籍）／新しい社会５下（東京書籍）／小学社会５（教育出版）／小学社会 ５年（日本文教出版）／新しい地図帳（東京書籍）／楽しく学ぶ 小学生の地図帳３・４・５・６年（帝国書院）",
+    "小5図画工作": "図画工作５・６上 心をひらいて（開隆堂）／図画工作５・６下 つながる思い（開隆堂）／図画工作５・６上 見つめて 広げて（日本文教出版）／図画工作５・６下 見つめて 広げて（日本文教出版）",
+    "小5道徳": "新訂 新しい道徳 ５（東京書籍）／かがやけ みらい 小学校道徳５年 きづき（学校図書）／かがやけ みらい 小学校道徳５年 まなび（学校図書）／小学道徳５ はばたこう明日へ（教育出版）／道徳 ５ きみが いちばん ひかるとき（光村出版）／小学道徳 生きる 力 ５（日本文教出版）／小学道徳 生きる 力 ５ 道徳ノート（日本文教出版）／小学どうとく ゆたかな心 ５年（光文書院）／新・みんなの道徳５（学研教育みらい）／みんなで考え、話し合う 小学生の道徳５（廣あかつき）／自分を見つめ、考える 道徳ノート５（廣あかつき）",
+    "小5保健体育": "新しい保健 ５・６（東京書籍）／たのしい保健 ５・６年（大日本図書）／わたしたちの保健 ５・６年（文教社）／小学保健 ５・６年（光文書院）／みんなの保健 ５・６年（学研）",
+    "小5理科": "新しい理科 ５（東京書籍）／たのしい理科５年（大日本図書）／みんなと学ぶ 小学校理科 ５年（学校図書）／未来をひらく 小学理科 ５（教育出版）／楽しい理科 5年（信州教育出版）／わくわく理科 ５（啓林館）",
+    "小6音楽": "小学音楽 おんがくのおくりもの ６（教育出版）／小学生の音楽６（教育芸術社）",
+    "小6家庭": "新しい家庭 ５・６（東京書籍）／小学校 わたしたちの家庭科（開隆堂）",
+    "小6外国語": "NEW HORIZON Elementar English Course 5（東京書籍）／NEW HORIZON Elementar English Course Picture Dictionary（東京書籍）／NEW HORIZON Elementar English Course 6（東京書籍）／Junior Sunshine 6（開隆堂）／JUNIOR TOTAL ENGLISH 2（学校図書）／CROWN Jr. 6（三省堂）／ONE WORLD Smiles 6（教育出版）／Here We Go! 6（光村出版）／Blue Sky elementary 6（啓林館）",
+    "小6国語": "新しい国語 六（東京書籍）／みんなと学ぶ 小学校 国語 六年 上（学校図書）／みんなと学ぶ 小学校 国語 六年 下（学校図書）／ひろがる言葉 小学国語 六上（教育出版）／ひろがる言葉 小学国語 六下（教育出版）／国語六 創造（光村出版）／新しい書写 六（東京書籍）／みんなと学ぶ 小学校書写 六年（学校図書）／小学 書写 六年（教育出版）／書写 六年（光村図書）／小学書写 六年（日本文教出版）",
+    "小6算数": "新しい算数 ６ 数学へジャンプ！（東京書籍）／たのしい算数６年（大日本図書）／みんなと学ぶ 小学校 算数 ６年（学校図書）／みんなと学ぶ 小学校 算数 ６年 中学校へのかけ橋（学校図書）／小学算数６（教育出版）／わくわく 算数６（啓林館）／小学算数 ６年（日本文教出版）",
+    "小6社会": "新しい社会６（東京書籍）／新しい社会６ 政治・国際編（東京書籍）／新しい社会６ 歴史編（東京書籍）／小学社会６（教育出版）／小学社会 ６年（日本文教出版）／新しい地図帳（東京書籍）／楽しく学ぶ 小学生の地図帳３・４・５・６年（帝国書院）",
+    "小6図画工作": "図画工作５・６上 心をひらいて（開隆堂）／図画工作５・６下 つながる思い（開隆堂）／図画工作５・６上 見つめて 広げて（日本文教出版）／図画工作５・６下 見つめて 広げて（日本文教出版）",
+    "小6道徳": "新訂 新しい道徳 ６（東京書籍）／かがやけ みらい 小学校道徳６年 きづき（学校図書）／かがやけ みらい 小学校道徳６年 まなび（学校図書）／小学道徳６ はばたこう明日へ（教育出版）／道徳 ６ きみが いちばん ひかるとき（光村出版）／小学道徳 生きる 力 ６（日本文教出版）／小学道徳 生きる 力 ６ 道徳ノート（日本文教出版）／小学どうとく ゆたかな心 ６年（光文書院）／新・みんなの道徳６（学研教育みらい）／みんなで考え、話し合う 小学生の道徳６（廣あかつき）／自分を見つめ、考える 道徳ノート６（廣あかつき）",
+    "小6保健体育": "新しい保健 ５・６（東京書籍）／たのしい保健 ５・６年（大日本図書）／わたしたちの保健 ５・６年（文教社）／小学保健 ５・６年（光文書院）",
+    "小6理科": "新しい理科 ６（東京書籍）／たのしい理科６年（大日本図書）／みんなと学ぶ 小学校理科 ６年（学校図書）／未来をひらく 小学理科 ６（教育出版）／楽しい理科 6年（信州教育出版）／わくわく理科 ６（啓林館）",
+    "中1音楽": "中学音楽 １ 音楽のおくりもの（教育出版）／中学生の音楽 １（教育芸術社）／中学器楽 音楽のおくりもの（教育出版）／中学生の器楽（教育芸術社）",
+    "中1外国語": "NEW HORIZON English Course 1（東京書籍）／SUNSHINE ENGLISH COURSE 1（開隆堂）／NEW CROWN English Series 1（三省堂）／ONE WORLD English Course 1（教育出版）／Here We Go! ENGLISH COURSE 1（光村図書）／BLUE SKY English Course 1（啓林館）",
+    "中1技術・家庭": "新しい技術・家庭 技術分野 未来を創る Technology（東京書籍）／New技術・家庭 技術分野 明日を創造する（教育図書）／New技術・家庭 技術分野 明日を創造する技術ハンドブック（教育図書）／技術・家庭 技術分野 テクノロジーに希望をのせて（開隆堂）／新しい技術・家庭 家庭分野 自立と共生を目指して（東京書籍）／New技術・家庭 家庭分野 くらしを創造する（教育図書）／技術・家庭 家庭分野 生活の土台 自立と共生（開隆堂）",
+    "中1国語": "新しい国語 １（東京書籍）／現代の国語１（三省堂）／伝え合う言葉 中学国語１（教育出版）／国語１（光村図書）／新しい書写 一・二・三年（東京書籍）／現代の書写 一・二・三（三省堂）／中学書写（教育出版）／中学書写 一・二・三年（光村図書）",
+    "中1社会": "新しい社会 地理（東京書籍）／中学社会 地理 地域にまなぶ（教育出版）／社会科 中学生の地理 世界の姿と日本の国土（帝国書院）／中学社会 地理的分野（日本文教出版）／新しい社会 歴史（東京書籍）／中学社会 歴史 未来をひらく（教育出版）／社会科 中学生の歴史 日本の歩みと世界の動き（帝国書院）／中学歴史 日本と世界（山川出版）／中学社会 歴史的分野（日本文教出版）／[最新]新しい日本の歴史（育鵬社）／ともに学ぶ人間の歴史（学び舎）／新しい社会 地図（東京書籍）／中学校社会科地図（帝国書院）",
+    "中1数学": "新しい数学１（東京書籍）／数学の世界１（大日本図書）／中学校数学１（学校図書）／中学数学 １（教育出版）／未来へひろがる数学 １（啓林館）／日々の学びに数学的な見方・考え方をはたらかせる これからの 数学１（数研出版）／見方・考え方がはたらき、問題解決のチカラが高まる これからの 数学１ 探究ノート（数研出版）／中学数学１（日本文教出版）",
+    "中1道徳": "新訂 新しい道徳１（東京書籍）／中学道徳１ とびだそう未来へ（教育出版）／中学道徳 １ きみが いちばん ひかるとき（光村図書）／中学道徳 あすを生きる １（日本文教出版）／中学道徳 あすを生きる １ 道徳ノート（日本文教出版）／新・中学生の道徳 明日への扉 １（学研）／中学生の道徳 自分を見つめる１（廣あかつき）／中学生の道徳ノート 自分を見つめる１（廣あかつき）／道徳 中学１ 生き方から学ぶ（日本教科書）",
+    "中1美術": "美術 １ 発見と創造（開隆堂）／美術１（光村図書）／美術１ 美術との出会い（日本文教出版）",
+    "中1保健体育": "新しい保健体育（東京書籍）／中学校保健体育（大日本図書）／最新 中学校保健体育（大修館書店）／中学保健体育（学研）",
+    "中1理科": "新しい科学１（東京書籍）／理科の世界 １（大日本図書）／中学校科学１（学校図書）／自然の探究 中学理科 １（教育出版）／未来へひろがるサイエンス１（啓林館）",
+    "中2音楽": "中学音楽 ２・3上 音楽のおくりもの（教育出版）／中学音楽 ２・4下 音楽のおくりもの（教育出版）／中学生の音楽 ２・３上（教育芸術社）／中学生の音楽 ２・３下（教育芸術社）／中学器楽 音楽のおくりもの（教育出版）／中学生の器楽（教育芸術社）",
+    "中2外国語": "NEW HORIZON English Course 2（東京書籍）／SUNSHINE ENGLISH COURSE 2（開隆堂）／NEW CROWN English Series 2（三省堂）／ONE WORLD English Course 2（教育出版）／Here We Go! ENGLISH COURSE 2（光村図書）／BLUE SKY English Course 2（啓林館）",
+    "中2技術・家庭": "新しい技術・家庭 技術分野 未来を創る Technology（東京書籍）／New技術・家庭 技術分野 明日を創造する（教育図書）／New技術・家庭 技術分野 明日を創造する技術ハンドブック（教育図書）／技術・家庭 技術分野 テクノロジーに希望をのせて（開隆堂）／新しい技術・家庭 家庭分野 自立と共生を目指して（東京書籍）／New技術・家庭 家庭分野 くらしを創造する（教育図書）／技術・家庭 家庭分野 生活の土台 自立と共生（開隆堂）",
+    "中2国語": "新しい国語 ２（東京書籍）／現代の国語２（三省堂）／伝え合う言葉 中学国語２（教育出版）／国語２（光村図書）／新しい書写 一・二・三年（東京書籍）／現代の書写 一・二・三（三省堂）／中学書写（教育出版）／中学書写 一・二・三年（光村図書）",
+    "中2社会": "新しい社会 地理（東京書籍）／中学社会 地理 地域にまなぶ（教育出版）／社会科 中学生の地理 世界の姿と日本の国土（帝国書院）／中学社会 地理的分野（日本文教出版）／新しい社会 歴史（東京書籍）／中学社会 歴史 未来をひらく（教育出版）／社会科 中学生の歴史 日本の歩みと世界の動き（帝国書院）／中学歴史 日本と世界（山川出版）／中学社会 歴史的分野（日本文教出版）／[最新]新しい日本の歴史（育鵬社）／ともに学ぶ人間の歴史（学び舎）／新しい社会 地図（東京書籍）／中学校社会科地図（帝国書院）",
+    "中2数学": "新しい数学２（東京書籍）／数学の世界２（大日本図書）／中学校数学２（学校図書）／中学数学 ２（教育出版）／未来へひろがる数学 ２（啓林館）／日々の学びに数学的な見方・考え方をはたらかせる これからの 数学２（数研出版）／見方・考え方がはたらき、問題解決のチカラが高まる これからの 数学２ 探究ノート（数研出版）／中学数学２（日本文教出版）",
+    "中2道徳": "新訂 新しい道徳２（東京書籍）／中学道徳２ とびだそう未来へ（教育出版）／中学道徳 ２ きみが いちばん ひかるとき（光村図書）／中学道徳 あすを生きる ２（日本文教出版）／中学道徳 あすを生きる ２ 道徳ノート（日本文教出版）／新・中学生の道徳 明日への扉 ２（学研）／中学生の道徳 自分を考える２（廣あかつき）／中学生の道徳ノート 自分を考える２（廣あかつき）／道徳 中学２ 生き方を見つめる（日本教科書）",
+    "中2美術": "美術 ２・３ 探求と継承（開隆堂）／美術２・３（光村図書）／美術２・３上 学びの実感と広がり（日本文教出版）／美術２・３下 学びの探求と未来（日本文教出版）",
+    "中2保健体育": "新しい保健体育（東京書籍）／中学校保健体育（大日本図書）／最新 中学校保健体育（大修館書店）／中学保健体育（学研）",
+    "中2理科": "新しい科学２（東京書籍）／理科の世界 ２（大日本図書）／中学校科学２（学校図書）／自然の探究 中学理科 ２（教育出版）／未来へひろがるサイエンス２（啓林館）",
+    "中3音楽": "中学音楽 ２・3上 音楽のおくりもの（教育出版）／中学音楽 ２・4下 音楽のおくりもの（教育出版）／中学生の音楽 ２・３上（教育芸術社）／中学生の音楽 ２・３下（教育芸術社）／中学器楽 音楽のおくりもの（教育出版）／中学生の器楽（教育芸術社）",
+    "中3外国語": "NEW HORIZON English Course 3（東京書籍）／SUNSHINE ENGLISH COURSE 3（開隆堂）／NEW CROWN English Series 3（三省堂）／ONE WORLD English Course 3（教育出版）／Here We Go! ENGLISH COURSE 3（光村図書）／BLUE SKY English Course 3（啓林館）",
+    "中3技術・家庭": "新しい技術・家庭 技術分野 未来を創る Technology（東京書籍）／New技術・家庭 技術分野 明日を創造する（教育図書）／New技術・家庭 技術分野 明日を創造する技術ハンドブック（教育図書）／技術・家庭 技術分野 テクノロジーに希望をのせて（開隆堂）／新しい技術・家庭 家庭分野 自立と共生を目指して（東京書籍）／New技術・家庭 家庭分野 くらしを創造する（教育図書）／技術・家庭 家庭分野 生活の土台 自立と共生（開隆堂）",
+    "中3国語": "新しい国語 ３（東京書籍）／現代の国語３（三省堂）／伝え合う言葉 中学国語３（教育出版）／国語３（光村図書）／新しい書写 一・二・三年（東京書籍）／現代の書写 一・二・三（三省堂）／中学書写（教育出版）／中学書写 一・二・三年（光村図書）",
+    "中3社会": "新しい社会 歴史（東京書籍）／中学社会 歴史 未来をひらく（教育出版）／社会科 中学生の歴史 日本の歩みと世界の動き（帝国書院）／中学歴史 日本と世界（山川出版）／中学社会 歴史的分野（日本文教出版）／[最新]新しい日本の歴史（育鵬社）／ともに学ぶ人間の歴史（学び舎）／新しい社会 公民（東京書籍）／中学社会 公民 ともに生きる（教育出版）／社会科 中学生の公民 よりよい社会を目指して（帝国書院）／中学社会 公民的分野（日本文教出版）／新しい公民教科書（自由社）／[最新]新しいみんなの公民（育鵬社）／新しい社会 地図（東京書籍）／中学校社会科地図（帝国書院）",
+    "中3数学": "新しい数学３（東京書籍）／数学の世界３（大日本図書）／中学校数学３（学校図書）／中学数学 ３（教育出版）／未来へひろがる数学 ３（啓林館）／日々の学びに数学的な見方・考え方をはたらかせる これからの 数学３（数研出版）／見方・考え方がはたらき、問題解決のチカラが高まる これからの 数学３ 探究ノート（数研出版）／中学数学３（日本文教出版）",
+    "中3道徳": "新訂 新しい道徳３（東京書籍）／中学道徳３ とびだそう未来へ（教育出版）／中学道徳 ３ きみが いちばん ひかるとき（光村図書）／中学道徳 あすを生きる ３（日本文教出版）／中学道徳 あすを生きる ３ 道徳ノート（日本文教出版）／新・中学生の道徳 明日への扉 ３（学研）／中学生の道徳 自分をのばす３（廣あかつき）／中学生の道徳ノート 自分をのばす３（廣あかつき）／道徳 中学３ 生き方を創造する（日本教科書）",
+    "中3美術": "美術 ２・３ 探求と継承（開隆堂）／美術２・３（光村図書）／美術２・３上 学びの実感と広がり（日本文教出版）／美術２・３下 学びの探求と未来（日本文教出版）",
+    "中3保健体育": "新しい保健体育（東京書籍）／中学校保健体育（大日本図書）／最新 中学校保健体育（大修館書店）／中学保健体育（学研）",
+    "中3理科": "新しい科学３（東京書籍）／理科の世界 ３（大日本図書）／中学校科学３（学校図書）／自然の探究 中学理科 ３（教育出版）／未来へひろがるサイエンス３（啓林館）"
+  },
+  "A-03-b": {
+    "新しい理科 ３（東京書籍）": "1 春のしぜんにとび出そう／2 たねをまこう （植物を育てよう1）／3 チョウを育てよう （こん虫を育てよう1）／4 風やゴムで動かそう／5 こん虫を調べよう／6 太陽をかげを調べよう／7 太陽の光を調べよう （太陽を調べよう1）／8 音を出して調べよう／9 物の重さをくらべよう／10 明かりをつけよう／11 じしゃくにつけよう",
+    "新しい理科 ４（東京書籍）": "1 あたたかくなると（あたたかさと生き物1）／2 動物のからだのつくりと運動／3 天気と気温／4 電流のはたらき／5 雨水のゆくえと地面のようす／6 暑くなると（あたたかさと生き物2）／7 月や星の見え方／8 自然のなかの水のすがた／9 すずしくなると（あたたかさと生き物3）／10 とじこめた空気と水（物のせいしつを調べよう1）／11 物の体積と温度（物のせいしつを調べよう2）／12 物のあたたまり方（物のせいしつを調べよう3）／13 寒くなると（あたたかさと生き物4）／14 水のすがたと温度（物のせいしつを調べよう4）／15 生き物の１年をふり返って（あたたかさと生き物4）",
+    "新しい理科 ５（東京書籍）": "1 天気の変化（天気を予想しよう1）／2 植物の発芽と成長（生命のつながりを考えよう1）／3 魚のたんじょう（生命のつながりを考えよう2）／4 花から実へ（生命のつながりを考えよう3）／5 台風と天気の変化（天気を予想しよう2）／6 流れる水のはたらき／7 物のとけ方／8 人のたんじょう（生命のつながりを考えよう4）／9 電流がうみ出す力／10 ふりこのきまり",
+    "新しい理科 ６（東京書籍）": "1 物の燃え方と空気／2 動物のからだのはたらき／3 植物のからだのはたらき／4 生き物のくらしと環境／5 月の形と太陽／6 大地のつくり（大地のつくりと変化1）／7 変わり続ける大地（大地のつくりと変化2）／8 てこのはたらき／9 電気と私たちのくらし／10 水溶液の性質とはたらき／11 地球に生きる",
+    "新しい科学１（東京書籍）": "単元１ 植物の世界 ＞ 第１章 花のつくりとはたらき／単元１ 植物の世界 ＞ 第２章 葉・茎・根のつくりとはたらき／単元１ 植物の世界 ＞ 第３章 植物の分類／単元２ 身のまわりの物質 ＞ 第１章 身のまわりの物質とその性質／単元２ 身のまわりの物質 ＞ 第２章 気体の性質／単元２ 身のまわりの物質 ＞ 第３章 水溶液の性質／単元２ 身のまわりの物質 ＞ 第４章 物質の姿と状態変化／単元３ 身のまわりの現象 ＞ 第１章 光の世界／単元３ 身のまわりの現象 ＞ 第２章 音の世界／単元３ 身のまわりの現象 ＞ 第３章 力の世界／単元４ 大地の変化 ＞ 第１章 火をふく大地／単元４ 大地の変化 ＞ 第２章 動き続ける大地／単元４ 大地の変化 ＞ 第３章 地層から読みとる大地の変化",
+    "新しい科学２（東京書籍）": "単元１ 化学変化と原子・分子 ＞ 第１章 物質のなり立ち／単元１ 化学変化と原子・分子 ＞ 第２章 物質どうしの化学変化／単元１ 化学変化と原子・分子 ＞ 第３章 酸素がかかわる化学変化／単元１ 化学変化と原子・分子 ＞ 第４章 化学変化と物質の質量／単元１ 化学変化と原子・分子 ＞ 第５章 化学変化とその利用／単元２ 動物の生活と生物の変遷 ＞ 第１章 生物と細胞／単元２ 動物の生活と生物の変遷 ＞ 第２章 動物のからだのつくりとはたらき／単元２ 動物の生活と生物の変遷 ＞ 第３章 動物の分類／単元２ 動物の生活と生物の変遷 ＞ 第４章生物の変遷と進化／単元３ 天気とその変化 ＞ 第１章 気象観測と雲のでき方／単元３ 天気とその変化 ＞ 第２章 前線とそのまわりの天気の変化／単元３ 天気とその変化 ＞ 第３章 大気の動きと日本の天気／単元４ 電気の世界 ＞ 第１章 静電気と電流／単元４ 電気の世界 ＞ 第２章 電流の性質／単元４ 電気の世界 ＞ 第３章 電流と磁界",
+    "新しい科学３（東京書籍）": "単元１ 化学変化とイオン ＞ 第１章 水溶液とイオン／単元１ 化学変化とイオン ＞ 第２章 化学変化と電池／単元１ 化学変化とイオン ＞ 第３章 酸、アルカリとイオン／単元２ 生命の連続性 ＞ 第１章 生物の成長と生殖／単元２ 生命の連続性 ＞ 第２章 遺伝の規則性と遺伝子／単元３ 運動とエネルギー ＞ 第１章 物体のいろいろな運動／単元３ 運動とエネルギー ＞ 第２章 力の規則性／単元３ 運動とエネルギー ＞ 第３章 エネルギーと仕事／単元４ 地球と宇宙 ＞ 第１章 宇宙の広がり／単元４ 地球と宇宙 ＞ 第２章 地球の運動と天体の動き／単元４ 地球と宇宙 ＞ 第３章 月と惑星の見え方／単元５ 地球と私たちの未来のために ＞ 第１章 自然のなかの生物／単元５ 地球と私たちの未来のために ＞ 第２章 自然環境の調査と保全／単元５ 地球と私たちの未来のために ＞ 第３章 自然の恵みと災害／単元５ 地球と私たちの未来のために ＞ 第４章 科学技術と人間",
+    "新しい社会３（東京書籍）": "１ わたしのまち みんなのまち ＞ 0 学校のまわり／１ わたしのまち みんなのまち ＞ 1 市の様子／２ はたらく人とわたしたちのくらし ＞ 1 農家の仕事／２ はたらく人とわたしたちのくらし ＞ 2 工場の仕事／２ はたらく人とわたしたちのくらし ＞ 2 店ではたらく人／３ くらしを守る ＞ 1 火事からくらしを守る／３ くらしを守る ＞ 2 事故や事件からくらしを守る／４ 市のうつりかわり ＞ 1 市の様子と人々のくらしのうつりかわり／１ わたしたちの県 ＞ 0 日本地図を広げて",
+    "新しい社会４（東京書籍）": "１ わたしたちの県 ＞ 1 県の広がり／２ 住みよいくらしをつくる ＞ 1 水はどこから／２ 住みよいくらしをつくる ＞ 2 ごみのしょりと利用／３ 自然災害からくらしを守る ＞ 1 地震からくらしを守る／４ きょう土の伝統・文化と先人たち ＞ 1 残したいもの　伝えたいもの／４ きょう土の伝統・文化と先人たち ＞ 2 谷に囲まれた台地に水を引く／５ 特色ある地いきと人々のくらし ＞ 1 すずりをつくるまち・石巻市雄勝町／５ 特色ある地いきと人々のくらし ＞ 2 国際交流に取り組むまち・仙台市／５ 特色ある地いきと人々のくらし ＞ 3 美しい景観を生かすまち・松島町／古いまちなみを生かすまち・登米市登米町（選択）",
+    "新しい社会５（東京書籍）": "１ わたしたちの国土 ＞ 1 世界の中の国土／１ わたしたちの国土 ＞ 2 国土の地形の特色／１ わたしたちの国土 ＞ 3 低い土地のくらし／１ わたしたちの国土 ＞ 3 高い土地のくらし／１ わたしたちの国土 ＞ 4 国土の気候の特色／１ わたしたちの国土 ＞ 5 あたたかい土地のくらし／１ わたしたちの国土 ＞ 5 寒い土地のくらし／２ わたしたちの生活と食料生産 ＞ 1 くらしを支える食料生産／２ わたしたちの生活と食料生産 ＞ 2 米づくりのさかんな地域／２ わたしたちの生活と食料生産 ＞ 3 水産業のさかんな地域／２ わたしたちの生活と食料生産 ＞ 4 これからの食糧生産とわたしたち／３ わたしたちの生活と工業生産 ＞ 1 くらしを支える工業生産／３ わたしたちの生活と工業生産 ＞ 2 自動車をつくる工業／３ わたしたちの生活と工業生産 ＞ 3 工業生産を支える輸送と貿易／３ わたしたちの生活と工業生産 ＞ 4 これからの工業生産とわたしたち／４ 情報化した社会と産業の発展 ＞ 1 情報産業とわたしたちのくらし／４ 情報化した社会と産業の発展 ＞ 2 情報を生かす産業／４ 情報化した社会と産業の発展 ＞ 3 情報を生かすわたしたち／５ わたしたちの生活と環境 ＞ 1 自然災害を防ぐ／５ わたしたちの生活と環境 ＞ 2 わたしたちの生活と森林／５ わたしたちの生活と環境 ＞ 3 環境を守るわたしたち",
+    "新しい社会６（東京書籍）": "１ わたしたちの生活と政治 ＞ 1 わたしたちのくらしと日本国憲法／１ わたしたちの生活と政治 ＞ 2 国の政治のしくみと選挙／１ わたしたちの生活と政治 ＞ 3 子育て支援の願いを実現する政治／１ わたしたちの生活と政治 ＞ 3 震災復興の願いを実現する政治／２ 日本の歴史 ＞ 1 縄文のむらから古墳のくにへ／２ 日本の歴史 ＞ 2 天皇中心の国づくり／２ 日本の歴史 ＞ 3 貴族のくらし／２ 日本の歴史 ＞ 4 武士の世の中へ／２ 日本の歴史 ＞ 5 今に伝わる室町文化／２ 日本の歴史 ＞ 6 戦国の世から天下統一へ／２ 日本の歴史 ＞ 7 江戸幕府と政治の安定／２ 日本の歴史 ＞ 8 町人の文化と新しい学問／２ 日本の歴史 ＞ 9 明治の国づくりを進めた人々／２ 日本の歴史 ＞ 10 世界に歩み出した日本／２ 日本の歴史 ＞ 11 長く続いた戦争と人々のくらし／２ 日本の歴史 ＞ 12 新しい日本、平和な日本へ／３ 世界の中の日本 ＞ 1 日本とつながりの深い国々／３ 世界の中の日本 ＞ 2 世界の未来と日本の役割",
+    "新しい社会 歴史（東京書籍）": "第１章 歴史の流れをとらえよう／第２章 古代までの日本 ＞ 1節 世界の古代文明と宗教のおこり／第２章 古代までの日本 ＞ 2節 日本列島の誕生と大陸の交流／第２章 古代までの日本 ＞ 3節 古代国家の歩みと東アジア世界／第３章 中世の日本 ＞ 1節 武士の台頭と鎌倉幕府／第３章 中世の日本 ＞ 2節 東アジア世界との関わりと社会の変動／第４章 近世の日本 ＞ 1節 ヨーロッパ人との出会いと全国統一／第４章 近世の日本 ＞ 2節 江戸幕府の成立と鎖国／第４章 近世の日本 ＞ 3節 産業の発達と幕府政治の動き／第５章 開国と近代日本の歩み ＞ 1節 欧米の進出と日本の開国／第５章 開国と近代日本の歩み ＞ 2節 明治維新／第５章 開国と近代日本の歩み ＞ 3節 日清・日露戦争と近代産業／第６章 二度の世界大戦と日本 ＞ 1節 第一次世界大戦と日本／第６章 二度の世界大戦と日本 ＞ 2節 世界恐慌と日本の中国侵略／第６章 二度の世界大戦と日本 ＞ 3節 第二次世界大戦と日本／第７章 現代の日本と世界 ＞ 1節 戦後日本の発展と国際社会／第７章 現代の日本と世界 ＞ 2節 新たな時代の日本と世界",
+    "新しい社会 地理（東京書籍）": "第１章 世界の姿／第２章 世界各地の人々の生活と環境／第３章 世界の諸地域 ＞ 1節 アジア州／第３章 世界の諸地域 ＞ 2節 ヨーロッパ州／第３章 世界の諸地域 ＞ 3節 アフリカ州／第３章 世界の諸地域 ＞ 4節 北アメリカ州／第３章 世界の諸地域 ＞ 5節 南アメリカ州／第３章 世界の諸地域 ＞ 6節 オセアニア州／第４章 世界のさまざまな地域の調査／第１章 日本の姿／第２章 世界から見た日本の姿 ＞ 1節 世界から見た日本の自然環境／第２章 世界から見た日本の姿 ＞ 2節 世界から見た日本の人口／第２章 世界から見た日本の姿 ＞ 3節 世界から見た日本の資源・エネルギーと産業／第２章 世界から見た日本の姿 ＞ 4節 世界と日本の結び付き／第３章 日本の諸地域 ＞ 1節 九州地方／第３章 日本の諸地域 ＞ 2節 中国・四国地方／第３章 日本の諸地域 ＞ 3節 近畿地方／第３章 日本の諸地域 ＞ 4節 中部地方／第３章 日本の諸地域 ＞ 5節 関東地方／第３章 日本の諸地域 ＞ 6節 東北地方／第３章 日本の諸地域 ＞ 7節 北海道地方／第４章 身近な地域の調査",
+    "新しい社会 公民（東京書籍）": "第１章 現代社会と私たちの生活 ＞ 1節 現代社会の特色と私たち／第１章 現代社会と私たちの生活 ＞ 2節 私たちの生活と文化／第１章 現代社会と私たちの生活 ＞ 3節 現代社会の見方や考え方／第２章 個人の尊重と日本国憲法 ＞ 1節 人権と日本国憲法／第２章 個人の尊重と日本国憲法 ＞ 2節 人権と共生社会／第２章 個人の尊重と日本国憲法 ＞ 3節 これからの人権保障／第３章 現代の民主政治と社会 ＞ 1節 現代の民主政治／第３章 現代の民主政治と社会 ＞ 2節 国の政治の仕組み／第３章 現代の民主政治と社会 ＞ 3節 地方自治と私たち／第４章 私たちの暮らしと経済 ＞ 1節 消費生活と経済／第４章 私たちの暮らしと経済 ＞ 2節 生産と労働／第４章 私たちの暮らしと経済 ＞ 3節 価格の働きと金融／第４章 私たちの暮らしと経済 ＞ 4節 政府の役割と国民の福祉／第４章 私たちの暮らしと経済 ＞ 5節 これからの経済と社会／第５章 地球社会と私たち ＞ 1節 国際社会の仕組み／第５章 地球社会と私たち ＞ 2節 さまざまな国際問題／第５章 地球社会と私たち ＞ 3節 これからの地球社会と日本／終章 より良い社会を目指して"
+  }
 }
 </script>
 
