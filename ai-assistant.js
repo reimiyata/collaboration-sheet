@@ -683,6 +683,22 @@ function updateUndoRedoButtons() {
 	$('#main-redo-btn').prop('disabled', !canRedo);
 }
 
+function clearAllFields() {
+	// Clear all form inputs
+	$('.form-control').val('');
+	$('.form-check-input').prop('checked', false);
+	
+	// Update the spec and save state for undo/redo
+	updateSpec();
+	saveState();
+	
+	// Redraw the sheet to reflect changes
+	const spec = JSON.parse($('#data-sheetspec').text());
+	$('#hearing-item-wrap').empty();
+	makeSheet(spec);
+	resizeTextarea();
+}
+
 // ========================================
 // Speech Recognition
 // ========================================
@@ -858,6 +874,15 @@ $(document).ready(function () {
 			saveState();
 		}, 500); // Wait 500ms after selection before saving
 	});
+
+	// Clear all button
+	$('#clear-all-btn').on('click', function () {
+		const result = window.confirm('すべての入力項目をクリアしますか？\n\nこの操作は元に戻す（Undo）ことができます。');
+		if (result) {
+			clearAllFields();
+		}
+	});
+
 
 	// Hide AI assistant in customization mode
 	// (This will be called from customization.js)
