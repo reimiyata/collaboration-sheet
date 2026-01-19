@@ -77,19 +77,28 @@ main {
 }
 
 #menu-wrap {
-    display: table;
-    border-collapse: separate;
-    border-spacing: 4px 0;
-    margin: 0 -4px
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    position: sticky;
+    top: 48px;
+    background-color: white;
+    z-index: 1020;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 100%;
 }
 
 #general-menu {
-    display: table-cell;
+    display: flex;
 }
 
 .menu-item {
-    display: table-cell;
-    vertical-align: top;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 #select-sheet {
@@ -274,5 +283,9 @@ main {
 }
 
 .change-display-item {
-    width: 220px;
+    width: 157px;
+}
+
+#toggle-customization-mode {
+    width: 163px;
 }
