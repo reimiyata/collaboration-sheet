@@ -934,7 +934,8 @@ $(document).ready(function () {
 	});
 
 	// File selection button
-	$('#select-files-btn').on('click', function () {
+	$('#select-files-btn').on('click', function (e) {
+		e.stopPropagation();
 		$('#bulk-file-input').click();
 	});
 
@@ -944,7 +945,9 @@ $(document).ready(function () {
 	});
 
 	// Drag and drop
-	$('#file-drop-zone').on('click', function () {
+	$('#file-drop-zone').on('click', function (e) {
+		// Prevent recursion if the click came from the file input itself
+		if (e.target.id === 'bulk-file-input') return;
 		$('#bulk-file-input').click();
 	});
 

@@ -30,7 +30,7 @@ function enterCustomizationMode() {
 	$('#ai-chat-window').addClass('ai-chat-hidden');
 
 	// 入れ子構造でシートを描画
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	makeNestedSheet(spec);
 
 	// ドラッグ&ドロップを有効化
@@ -64,7 +64,7 @@ function exitCustomizationMode() {
 
 	// シートを再描画（通常モード）
 	$('#hearing-item-wrap').empty();
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	makeSheet(spec);
 	resizeTextarea();
 }
@@ -214,7 +214,7 @@ function destroyDragAndDrop() {
 
 // IDの自動振り直し（DOM構造からSpecを再構築）
 function reassignIds() {
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	let originalContent = spec['sheet-content']; // フォームデータなどを保持するために参照
 
 	let newContent = [];
@@ -286,7 +286,7 @@ function reassignIds() {
 
 // DOM上のID表示のみ更新（再描画なし）
 function refreshIdsInDom() {
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	let content = spec['sheet-content'];
 
 	// 現在のDOMの各要素に対して、新しいIDを適用
@@ -309,7 +309,7 @@ function refreshSheet() {
 	// スクロール位置の保持
 	let scrollPos = $(window).scrollTop();
 
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	makeNestedSheet(spec);
 	initializeDragAndDrop();
 
@@ -318,7 +318,7 @@ function refreshSheet() {
 
 // 項目の編集
 function editItem(itemId) {
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	let item = spec['sheet-content'].find(c => c.id === itemId);
 
 	if (!item) {
@@ -352,7 +352,7 @@ function editItem(itemId) {
 // 項目の保存
 function saveItem() {
 	let itemId = $('#edit-item-id').val();
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	let item = spec['sheet-content'].find(c => c.id === itemId);
 
 	if (!item) {
@@ -400,7 +400,7 @@ function saveItem() {
 
 // 項目の削除
 function deleteItem(itemId) {
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	let item = spec['sheet-content'].find(c => c.id === itemId);
 
 	if (!item) {
@@ -420,34 +420,35 @@ function deleteItem(itemId) {
 	}
 
 	// 項目と子項目を削除
-	function deleteItemAndChildren(id) {
-		spec['sheet-content'] = spec['sheet-content'].filter(c => {
-			if (c.id === id) {
-				return false;
-			}
+	let idsToDelete = new Set();
+	function collectIds(id) {
+		idsToDelete.add(id);
+		spec['sheet-content'].forEach(c => {
 			if (c.parent === id) {
-				deleteItemAndChildren(c.id);
-				return false;
+				collectIds(c.id);
 			}
-			return true;
 		});
 	}
+	collectIds(itemId);
 
-	deleteItemAndChildren(itemId);
+	spec['sheet-content'] = spec['sheet-content'].filter(c => !idsToDelete.has(c.id));
 
 	// JSONを更新
 	$('#data-sheetspec').text(JSON.stringify(spec, null, 2));
 
+	// DOMから物理的に削除（reassignIdsがDOMを参照するため、ここで削除しておく）
+	$(`#${itemId}`).remove();
+
 	// IDを振り直し
 	reassignIds();
 
-	// シートを再描画
+	// シートを再描画（振り直されたIDを表示に反映）
 	refreshSheet();
 }
 
 // 子項目の追加
 function addChildItem(parentId) {
-	let spec = JSON.parse($('#data-sheetspec').html());
+	let spec = JSON.parse($('#data-sheetspec').text());
 	let parent = spec['sheet-content'].find(c => c.id === parentId);
 
 	if (!parent) {
@@ -502,7 +503,7 @@ function addChildItem(parentId) {
 	// 新しい項目を編集モードで開く
 	setTimeout(() => {
 		// IDが振り直されているので、新しいIDを取得
-		let updatedSpec = JSON.parse($('#data-sheetspec').html());
+		let updatedSpec = JSON.parse($('#data-sheetspec').text());
 		let updatedItem = updatedSpec['sheet-content'].find(c => c.name === '新しい項目' && c.parent === parentId);
 		if (updatedItem) {
 			editItem(updatedItem.id);
