@@ -213,6 +213,18 @@ function generateSystemPrompt() {
 	content.forEach(item => {
 		if (item.type === 'terminal') {
 			prompt += `\n- ID: ${item.id}, 名前: ${item.name}`;
+
+			// Include current value if it exists
+			const mainValue = item.form['form-main-answer'];
+			if (mainValue) {
+				prompt += `, 現在の値: ${mainValue}`;
+			}
+
+			const subValue = item.form['form-sub-answer'];
+			if (subValue) {
+				prompt += `, 詳細: ${subValue}`;
+			}
+
 			if (item.form['form-main-option']) {
 				prompt += `, 選択肢: ${item.form['form-main-option']}`;
 			}
